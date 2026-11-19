@@ -1,0 +1,4061 @@
+```html
+<!DOCTYPE html>
+<html lang="en" class="vault-locked">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>VELOURA — Official Luxury Fashion & Lifestyle</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Google Fonts: Inter & Playfair Display -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+
+  <!-- MQTT.js for WSS Live & Retained Offline Cloud Mailbox Sync -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+  <style>
+    /* =====================================================================
+       CRITICAL FIX #1: ZERO-FLASH SYNCHRONOUS CSS VAULT LOCK
+       Storefront stays mounted underneath at all times.
+       ===================================================================== */
+    html.vault-locked #vault-overlay {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    html.vault-unlocked body {
+      overflow: hidden !important;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none;
+    }
+
+    .font-serif-luxury {
+      font-family: 'Playfair Display', Georgia, serif;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(150, 150, 150, 0.25);
+      border-radius: 9999px;
+    }
+
+    @keyframes waveBar {
+      0%, 100% { height: 6px; }
+      50% { height: 22px; }
+    }
+    .voice-wave-bar {
+      width: 3px;
+      border-radius: 9999px;
+      background-color: #FF2A54;
+      animation: waveBar 0.75s ease-in-out infinite;
+    }
+    .voice-wave-bar:nth-child(2) { animation-delay: 0.12s; }
+    .voice-wave-bar:nth-child(3) { animation-delay: 0.24s; }
+    .voice-wave-bar:nth-child(4) { animation-delay: 0.36s; }
+    .voice-wave-bar:nth-child(5) { animation-delay: 0.48s; }
+
+    @keyframes livePulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.65; }
+    }
+    .typing-live-pulse {
+      animation: livePulse 1.3s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="bg-[#FAF9F6] text-stone-900 min-h-screen flex flex-col selection:bg-stone-900 selection:text-white overflow-x-hidden">
+
+  <!-- ========================================================================= -->
+  <!-- LAYER 1: VELOURA LUXURY E-COMMERCE STOREFRONT (ALWAYS MOUNTED UNDERNEATH) -->
+  <!-- ========================================================================= -->
+  <div id="storefront-layer" class="min-h-screen flex flex-col w-full">
+
+    <!-- Storefront Notification Toast (also displays disguised shopping alerts) -->
+    <div id="storeToast" class="hidden fixed bottom-5 right-5 left-5 sm:left-auto z-40 max-w-sm bg-stone-900 text-white px-4 py-3.5 rounded-2xl shadow-2xl border border-stone-700 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 text-xs font-medium">
+        <i class="fa-solid fa-bag-shopping text-amber-400 text-base flex-shrink-0"></i>
+        <span id="storeToastText">Added item to your shopping bag.</span>
+      </div>
+      <button type="button" onclick="hideStoreToast()" class="text-stone-400 hover:text-white p-1" aria-label="Close notice">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Clean White Sticky Store Header (No black announcement bar above) -->
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/80">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Top Row: Brand Logo, Wishlist & Shopping Bag -->
+        <div class="h-16 sm:h-18 flex items-center justify-between gap-4">
+          <a href="#top" onclick="resetStoreFilters(event)" class="text-2xl sm:text-3xl font-serif-luxury font-bold tracking-[0.22em] text-stone-900">
+            VELOURA
+          </a>
+
+          <!-- Right Store Controls -->
+          <div class="flex items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onclick="toggleWishlistDrawer(true)"
+              class="relative p-2.5 text-stone-700 hover:text-stone-900 rounded-full hover:bg-stone-100 transition"
+              aria-label="Wishlist"
+            >
+              <i class="fa-regular fa-heart text-lg"></i>
+              <span id="wishlistBadge" class="absolute top-1 right-1 w-4 h-4 rounded-full bg-stone-900 text-white text-[10px] font-bold flex items-center justify-center">2</span>
+            </button>
+
+            <button
+              type="button"
+              onclick="toggleCartDrawer(true)"
+              class="flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-3.5 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition shadow-sm"
+            >
+              <i class="fa-solid fa-bag-shopping"></i>
+              <span class="hidden sm:inline">Bag</span>
+              <span id="cartCountBadge" class="font-bold">(1)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Prominent Responsive Search Bar Row (Secret Code: 18771877 / ١٨٧٧١٨٧٧) -->
+        <div class="pb-3">
+          <form onsubmit="handleSearchSubmit(event)" class="relative max-w-2xl mx-auto flex items-center">
+            <i class="fa-solid fa-magnifying-glass text-stone-400 absolute left-4 pointer-events-none text-xs"></i>
+            <input
+              id="storeSearchInput"
+              type="search"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              oninput="handleSearchInput(this.value)"
+              onkeyup="handleSearchKeyup(event, this.value)"
+              placeholder="Search cashmere, leather goods, watches, or item code..."
+              class="w-full bg-stone-100 hover:bg-stone-200/60 focus:bg-white border border-stone-200 focus:border-stone-900 rounded-full pl-10 pr-20 py-2.5 text-sm text-stone-900 placeholder-stone-400 focus:outline-none transition"
+            />
+            <button
+              id="storeSearchClearBtn"
+              type="button"
+              onclick="clearSearchInput()"
+              class="hidden absolute right-14 text-stone-400 hover:text-stone-700 p-1.5 text-xs"
+              aria-label="Clear search"
+            >
+              <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+            <button
+              type="submit"
+              class="absolute right-1.5 bg-stone-900 hover:bg-stone-700 text-white px-3.5 py-1.5 rounded-full text-xs font-semibold transition"
+            >
+              Search
+            </button>
+          </form>
+        </div>
+
+        <!-- Responsive Category Pills -->
+        <div id="categoryPillNav" class="flex items-center gap-2 overflow-x-auto pb-3 no-scrollbar"></div>
+      </div>
+    </header>
+
+    <!-- Editorial Hero Banner -->
+    <section id="heroSection" class="relative bg-stone-900 text-white overflow-hidden">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 lg:py-24 grid lg:grid-cols-2 gap-10 items-center">
+        <div class="space-y-5">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 text-[11px] uppercase tracking-widest text-amber-200 font-semibold">
+            <span>Paris • Milan Flagship Editorial</span>
+          </div>
+          <h1 class="text-3xl sm:text-5xl lg:text-6xl font-serif-luxury font-normal leading-tight tracking-tight">
+            Timeless Form.<br />
+            <span class="italic font-light text-stone-300">Modern Craftsmanship.</span>
+          </h1>
+          <p class="text-stone-300 text-sm sm:text-base max-w-lg leading-relaxed">
+            Architectural essentials tailored from double-faced Italian cashmere, full-grain calfskin, and precision acoustic engineering.
+          </p>
+          <div class="flex flex-wrap items-center gap-3.5 pt-2">
+            <a
+              href="#catalogSection"
+              class="px-6 sm:px-7 py-3.5 rounded-full bg-white text-stone-900 font-semibold text-xs sm:text-sm hover:bg-stone-100 transition inline-flex items-center gap-2 shadow-lg"
+            >
+              <span>Explore Collection</span>
+              <i class="fa-solid fa-arrow-right text-xs"></i>
+            </a>
+            <button
+              type="button"
+              onclick="selectCategory('Accessories')"
+              class="px-6 sm:px-7 py-3.5 rounded-full border border-white/30 hover:bg-white/10 text-white font-medium text-xs sm:text-sm transition"
+            >
+              Leather Goods
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 sm:gap-4">
+          <img
+            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80"
+            alt="Veloura Editorial"
+            onerror="this.src='https://placehold.co/600x750/1c1917/e7e5e4?text=VELOURA+PARIS'"
+            class="rounded-2xl h-56 sm:h-72 lg:h-80 w-full object-cover shadow-2xl"
+          />
+          <img
+            src="https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=800&q=80"
+            alt="Veloura Atelier"
+            onerror="this.src='https://placehold.co/600x750/292524/e7e5e4?text=ATELIER+COLLECTION'"
+            class="rounded-2xl h-56 sm:h-72 lg:h-80 w-full object-cover mt-5 shadow-2xl"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- Service Pillars -->
+    <section class="bg-white border-b border-stone-200/70 py-5">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-3 gap-5 text-center sm:text-left">
+        <div class="flex items-center justify-center sm:justify-start gap-3">
+          <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-stone-800 flex-shrink-0">
+            <i class="fa-solid fa-truck-fast text-sm"></i>
+          </div>
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-stone-900">Express Global Shipping</h3>
+            <p class="text-[11px] text-stone-500">Complimentary insured courier on orders $250+</p>
+          </div>
+        </div>
+        <div class="flex items-center justify-center sm:justify-start gap-3">
+          <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-stone-800 flex-shrink-0">
+            <i class="fa-solid fa-shield-halved text-sm"></i>
+          </div>
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-stone-900">Authenticity Guaranteed</h3>
+            <p class="text-[11px] text-stone-500">Serialized craft certificate & 2-year warranty</p>
+          </div>
+        </div>
+        <div class="flex items-center justify-center sm:justify-start gap-3">
+          <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-stone-800 flex-shrink-0">
+            <i class="fa-solid fa-rotate-left text-sm"></i>
+          </div>
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-stone-900">30-Day Private Returns</h3>
+            <p class="text-[11px] text-stone-500">Effortless doorstep pickup & instant exchange</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Product Catalog Grid -->
+    <main id="catalogSection" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-7 gap-3">
+        <div>
+          <p class="text-[11px] uppercase tracking-widest text-stone-400 font-semibold mb-1">Curated Release</p>
+          <h2 id="catalogTitle" class="text-2xl sm:text-3xl font-serif-luxury font-bold text-stone-900">All Collections</h2>
+        </div>
+        <p id="catalogCount" class="text-xs text-stone-500"></p>
+      </div>
+      <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+    </main>
+
+    <!-- Store Footer -->
+    <footer class="bg-stone-900 text-stone-400 pt-14 pb-10 border-t border-stone-800">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+        <div class="space-y-3">
+          <span class="text-2xl font-serif-luxury font-bold tracking-[0.22em] text-white block">VELOURA</span>
+          <p class="text-xs leading-relaxed text-stone-400">
+            Architectural silhouettes and enduring materials crafted in family-owned European ateliers.
+          </p>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-white mb-3">Client Concierge</h4>
+          <ul class="space-y-2 text-xs">
+            <li>Shipping & Complimentary Returns</li>
+            <li>Private Styling Appointments</li>
+            <li>Size & Tailoring Guide</li>
+            <li>Cashmere & Calfskin Care</li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-white mb-3">The Maison</h4>
+          <ul class="space-y-2 text-xs">
+            <li>Sustainability & Traceability</li>
+            <li>Italian & French Ateliers</li>
+            <li>Editorial Lookbook</li>
+            <li>Privacy & Terms of Sale</li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-white mb-3">Private Client List</h4>
+          <p class="text-xs mb-3">Receive early access to private archive releases and seasonal previews.</p>
+          <form onsubmit="handleNewsletterSubmit(event)" class="flex gap-2">
+            <input
+              id="newsletterInput"
+              type="email"
+              required
+              placeholder="Enter your email..."
+              class="flex-1 bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-white"
+            />
+            <button type="submit" class="px-4 py-2 bg-white text-stone-900 rounded-xl text-xs font-bold hover:bg-stone-200 transition">
+              Join
+            </button>
+          </form>
+          <p id="newsletterSuccess" class="hidden text-xs text-emerald-400 font-semibold mt-2">
+            ✓ Welcome to the Veloura Private Client List.
+          </p>
+        </div>
+      </div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-between text-xs gap-4">
+        <p>© 2026 VELOURA Maison Inc. All rights reserved.</p>
+        <div class="flex items-center gap-4 text-stone-500 font-semibold">
+          <span>VISA</span>
+          <span>MASTERCARD</span>
+          <span>AMEX</span>
+          <span>APPLE PAY</span>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Product Quick-View Modal -->
+    <div id="quickViewModal" onclick="if(event.target===this) closeQuickView()" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+      <div id="quickViewContent" class="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl grid sm:grid-cols-2 relative"></div>
+    </div>
+
+    <!-- Shopping Bag Drawer -->
+    <div id="cartDrawer" onclick="if(event.target===this) toggleCartDrawer(false)" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex justify-end">
+      <div class="bg-white w-full max-w-md h-full flex flex-col justify-between shadow-2xl">
+        <div class="p-5 border-b border-stone-200 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <i class="fa-solid fa-bag-shopping text-stone-900"></i>
+            <h3 class="font-serif-luxury font-bold text-lg text-stone-900">Shopping Bag</h3>
+          </div>
+          <button type="button" onclick="toggleCartDrawer(false)" class="p-1.5 text-stone-400 hover:text-stone-800">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+        <div id="cartItemsContainer" class="flex-1 overflow-y-auto p-5 space-y-4"></div>
+        <div id="cartFooter" class="p-5 border-t border-stone-200 bg-stone-50 space-y-4"></div>
+      </div>
+    </div>
+
+    <!-- Wishlist Drawer -->
+    <div id="wishlistDrawer" onclick="if(event.target===this) toggleWishlistDrawer(false)" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex justify-end">
+      <div class="bg-white w-full max-w-md h-full flex flex-col justify-between shadow-2xl">
+        <div class="p-5 border-b border-stone-200 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <i class="fa-regular fa-heart text-stone-900"></i>
+            <h3 class="font-serif-luxury font-bold text-lg text-stone-900">Saved Wishlist</h3>
+          </div>
+          <button type="button" onclick="toggleWishlistDrawer(false)" class="p-1.5 text-stone-400 hover:text-stone-800">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+        <div id="wishlistItemsContainer" class="flex-1 overflow-y-auto p-5 space-y-4"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- LAYER 2: HIDDEN SNAPCHAT-INSPIRED 2-PERSON CHAT & CALLING OVERLAY         -->
+  <!-- Controlled synchronously via html.vault-locked for ZERO-FLASH exit        -->
+  <!-- ========================================================================= -->
+  <div id="vault-overlay" style="display:none; visibility:hidden; opacity:0;" class="fixed inset-0 bg-[#0B0D10] text-white flex-col z-50 select-none overflow-hidden">
+
+    <!-- Hidden Gallery Picker Input -->
+    <input id="galleryFileInput" type="file" accept="image/*,video/*" class="hidden" onchange="handleGalleryFileSelect(event)" />
+
+    <!-- CLEAN MOBILE-FIRST SNAPCHAT HEADER -->
+    <header class="bg-[#12151A]/95 backdrop-blur-md border-b border-white/10 px-3 sm:px-5 py-2.5 flex items-center justify-between gap-2 z-20">
+      <!-- Left: Partner Avatar + Name + Live Presence + Subtle Sync Dot -->
+      <div onclick="toggleSettingsModal(true)" class="flex items-center gap-2.5 min-w-0 cursor-pointer group">
+        <div class="relative flex-shrink-0">
+          <div id="partnerAvatar" class="w-10 h-10 rounded-full flex items-center justify-center font-black text-base shadow-md border-2 bg-gradient-to-tr from-[#00B2FF] to-[#00E5FF] border-[#00B2FF]">
+            P
+          </div>
+          <span id="partnerStatusDot" class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#12151A] bg-zinc-500"></span>
+        </div>
+
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h2 id="partnerHeaderName" class="font-bold text-sm sm:text-base truncate text-white group-hover:text-[#FFFC00] transition">
+              Partner 2
+            </h2>
+            <span id="cloudSyncPill" class="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/[0.06] text-zinc-400">
+              <span id="cloudSyncDot" class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+              <span id="cloudSyncText">Syncing</span>
+            </span>
+          </div>
+          <span id="partnerPresenceSubtext" class="block text-[11px] font-semibold text-zinc-400 truncate">
+            Offline
+          </span>
+        </div>
+      </div>
+
+      <!-- Right: Clean Action Icon Row -->
+      <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+        <!-- Voice Call -->
+        <button
+          type="button"
+          onclick="initiateCall('audio')"
+          class="w-9 h-9 rounded-full bg-white/[0.07] hover:bg-white/15 active:scale-95 text-emerald-400 flex items-center justify-center transition"
+          title="Voice Call"
+        >
+          <i class="fa-solid fa-phone text-xs"></i>
+        </button>
+
+        <!-- Video Call -->
+        <button
+          type="button"
+          onclick="initiateCall('video')"
+          class="w-9 h-9 rounded-full bg-white/[0.07] hover:bg-white/15 active:scale-95 text-[#00B2FF] flex items-center justify-center transition"
+          title="Video Call"
+        >
+          <i class="fa-solid fa-video text-xs"></i>
+        </button>
+
+        <!-- Telegram Ping Bell (Shows ONLY short toast "✓ نامەکە نێردرا") -->
+        <button
+          type="button"
+          onclick="sendTelegramStealthPing()"
+          class="w-9 h-9 rounded-full bg-amber-400/15 hover:bg-amber-400/25 active:scale-95 text-amber-300 border border-amber-400/30 flex items-center justify-center transition"
+          title="Send Disguised Shopping Alert"
+        >
+          <i class="fa-solid fa-bell text-xs"></i>
+        </button>
+
+        <!-- Settings Gear -->
+        <button
+          type="button"
+          onclick="toggleSettingsModal(true)"
+          class="w-9 h-9 rounded-full bg-white/[0.07] hover:bg-white/15 active:scale-95 text-zinc-300 flex items-center justify-center transition"
+          title="Settings"
+        >
+          <i class="fa-solid fa-gear text-xs"></i>
+        </button>
+
+        <!-- Bright Yellow SHOP Instant Exit Pill -->
+        <button
+          type="button"
+          onclick="instantLockVault()"
+          class="ml-0.5 px-3.5 py-2 rounded-full bg-[#FFFC00] hover:bg-[#e6e300] active:scale-95 text-black font-black text-xs flex items-center gap-1.5 shadow-md shadow-[#FFFC00]/20 transition"
+          title="Instant Return to VELOURA Store"
+        >
+          <i class="fa-solid fa-bag-shopping text-xs"></i>
+          <span>SHOP</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- SHORT FLOATING TOAST (e.g. "✓ نامەکە نێردرا") -->
+    <div id="shortToast" class="hidden fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-emerald-400 text-black font-black text-xs px-4 py-2 rounded-full shadow-2xl flex items-center gap-1.5 pointer-events-none">
+      <span id="shortToastText">✓ نامەکە نێردرا</span>
+    </div>
+
+    <!-- SUBTLE PRESENCE NOTIFICATION BANNER -->
+    <div id="presenceAlertBanner" class="hidden bg-gradient-to-r from-[#FF2A54] via-fuchsia-600 to-[#00B2FF] text-white text-xs font-bold px-4 py-1.5 text-center shadow-md flex items-center justify-center gap-2">
+      <i class="fa-solid fa-bolt text-[11px]"></i>
+      <span id="presenceAlertText">Partner connected</span>
+    </div>
+
+    <!-- MEDIA CHUNK TRANSFER PROGRESS BAR -->
+    <div id="mediaTransferBanner" class="hidden bg-[#181C24] border-b border-white/10 px-4 py-1.5 text-center text-[11px] text-[#00B2FF] font-bold flex items-center justify-center gap-2">
+      <i class="fa-solid fa-circle-notch fa-spin"></i>
+      <span id="mediaTransferText">Syncing media...</span>
+    </div>
+
+    <!-- SNAPCHAT-STYLE MESSAGE STREAM -->
+    <div id="chatMessagesContainer" onclick="closeActiveMessageMenu()" class="flex-1 overflow-y-auto px-3 sm:px-6 py-4 space-y-2.5">
+      <div id="messagesList" class="space-y-2.5"></div>
+
+      <!-- LIVE KEYSTROKE TYPING PREVIEW BUBBLE -->
+      <div id="liveTypingContainer" class="hidden max-w-2xl mx-auto pt-2 typing-live-pulse">
+        <div id="liveTypingBox" class="rounded-r-xl pl-3.5 pr-3 py-2.5 border-l-[3.5px] border-dashed border-[#00B2FF] bg-[#00B2FF]/10">
+          <div class="flex items-center gap-2 mb-1">
+            <span id="liveTypingHeader" class="text-[11px] font-black uppercase tracking-wider text-[#00B2FF]">
+              PARTNER IS TYPING...
+            </span>
+            <span class="flex gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-current animate-bounce"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style="animation-delay:0.12s"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-current animate-bounce" style="animation-delay:0.24s"></span>
+            </span>
+          </div>
+          <p id="liveTypingText" class="text-sm text-white/95 italic font-medium break-words"></p>
+        </div>
+      </div>
+
+      <div id="chatBottomAnchor"></div>
+    </div>
+
+    <!-- REPLY / EDIT CONTEXT BAR -->
+    <div id="composerContextBar" class="hidden bg-[#181C24] border-t border-white/10 px-4 py-2 flex items-center justify-between">
+      <div class="flex items-center gap-2 text-xs truncate">
+        <i id="contextBarIcon" class="fa-solid fa-reply text-[#00B2FF]"></i>
+        <span id="contextBarLabel" class="font-bold text-[#00B2FF]">Replying to:</span>
+        <span id="contextBarText" class="text-zinc-400 truncate"></span>
+      </div>
+      <button type="button" onclick="clearComposerContext()" class="text-zinc-400 hover:text-white p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- BOTTOM SNAPCHAT COMPOSER BAR -->
+    <footer class="bg-[#12151A] border-t border-white/10 px-2.5 sm:px-4 py-2.5">
+      <!-- Voice Note Recording Bar -->
+      <div id="voiceRecordingBar" class="hidden max-w-3xl mx-auto flex items-center justify-between bg-red-500/15 border border-red-500/40 rounded-full px-4 py-2">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1 h-6">
+            <span class="voice-wave-bar"></span>
+            <span class="voice-wave-bar"></span>
+            <span class="voice-wave-bar"></span>
+            <span class="voice-wave-bar"></span>
+            <span class="voice-wave-bar"></span>
+          </div>
+          <span id="voiceTimerLabel" class="text-xs sm:text-sm font-bold text-red-300">0:00</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="stopVoiceNote(false)" class="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-zinc-300">
+            Cancel
+          </button>
+          <button type="button" onclick="stopVoiceNote(true)" class="px-4 py-1.5 rounded-full bg-[#FF2A54] hover:bg-[#e61d46] text-xs font-black text-white flex items-center gap-1.5">
+            <i class="fa-solid fa-paper-plane text-[10px]"></i>
+            <span>Send</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Composer Form -->
+      <form id="chatComposerForm" onsubmit="handleSendChatSubmit(event)" class="max-w-3xl mx-auto flex items-center gap-2">
+        <!-- Built-in Camera Button -->
+        <button
+          type="button"
+          onclick="openSnapCameraModal('photo')"
+          class="w-10 h-10 rounded-full bg-[#FFFC00] hover:bg-[#e6e300] active:scale-95 text-black flex items-center justify-center transition flex-shrink-0 shadow-md"
+          title="Take Photo or Video Snap"
+        >
+          <i class="fa-solid fa-camera text-sm"></i>
+        </button>
+
+        <!-- Gallery Picker Button -->
+        <button
+          type="button"
+          onclick="triggerGalleryUpload()"
+          class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-zinc-200 flex items-center justify-center transition flex-shrink-0"
+          title="Send Photo or Video from Gallery"
+        >
+          <i class="fa-regular fa-image text-sm"></i>
+        </button>
+
+        <!-- Text Input (Live Keystroke Sync) -->
+        <div class="flex-1 relative">
+          <input
+            id="chatMessageInput"
+            type="text"
+            autocomplete="off"
+            onfocus="markPartnerMessagesSeen()"
+            oninput="handleLiveTypingInput(this.value)"
+            placeholder="Send a chat..."
+            class="w-full bg-[#1E232B] border border-white/15 focus:border-[#00B2FF] rounded-full px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none transition"
+          />
+        </div>
+
+        <!-- Mic / Voice Note Button -->
+        <button
+          id="voiceRecordBtn"
+          type="button"
+          onclick="startVoiceNote()"
+          class="w-10 h-10 rounded-full bg-white/10 hover:bg-[#FF2A54] active:scale-95 text-zinc-200 hover:text-white flex items-center justify-center transition flex-shrink-0"
+          title="Record Voice Note"
+        >
+          <i class="fa-solid fa-microphone text-sm"></i>
+        </button>
+
+        <!-- Send Text Button -->
+        <button
+          id="sendTextBtn"
+          type="submit"
+          class="hidden w-10 h-10 rounded-full bg-[#FF2A54] hover:bg-[#e01e45] active:scale-95 text-white font-bold items-center justify-center transition flex-shrink-0 shadow-lg"
+          title="Send Message"
+        >
+          <i class="fa-solid fa-paper-plane text-xs"></i>
+        </button>
+      </form>
+    </footer>
+
+    <!-- ========================================================================= -->
+    <!-- MODAL 1: SETTINGS (IDENTITY, TELEGRAM PING, FIREBASE RTDB, WIPE ALL)      -->
+    <!-- ========================================================================= -->
+    <div id="settingsModal" onclick="if(event.target===this) toggleSettingsModal(false)" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-[#161920] border border-white/15 rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-5 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-white/10 pb-3">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-[#FFFC00]"></i>
+            <h3 class="font-black text-base text-white">Chat Settings</h3>
+          </div>
+          <button type="button" onclick="toggleSettingsModal(false)" class="w-8 h-8 rounded-full bg-white/10 text-zinc-300 hover:text-white flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Section 1: Identity Switcher & Display Names -->
+        <div class="bg-white/[0.03] border border-white/10 rounded-2xl p-4 space-y-3">
+          <label class="block text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">
+            Identity &amp; Nicknames
+          </label>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button
+              id="roleSelectBtnA"
+              type="button"
+              onclick="selectMyRole('partnerA')"
+              class="py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition"
+            >
+              <span class="w-2.5 h-2.5 rounded-full bg-[#FF2A54]"></span>
+              <span id="roleBtnLabelA">Partner 1</span>
+            </button>
+            <button
+              id="roleSelectBtnB"
+              type="button"
+              onclick="selectMyRole('partnerB')"
+              class="py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition"
+            >
+              <span class="w-2.5 h-2.5 rounded-full bg-[#00B2FF]"></span>
+              <span id="roleBtnLabelB">Partner 2</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <div>
+              <label class="block text-[10px] font-bold text-zinc-400 mb-1">Partner 1 Name</label>
+              <input
+                id="settingsNameAInput"
+                type="text"
+                placeholder="Partner 1"
+                class="w-full bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FF2A54]"
+              />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-zinc-400 mb-1">Partner 2 Name</label>
+              <input
+                id="settingsNameBInput"
+                type="text"
+                placeholder="Partner 2"
+                class="w-full bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#00B2FF]"
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            onclick="saveNicknamesFromSettings()"
+            class="w-full py-2 rounded-xl bg-[#FFFC00] hover:bg-[#e6e300] text-black text-xs font-black transition"
+          >
+            Save Names
+          </button>
+        </div>
+
+        <!-- Section 2: Telegram Stealth Ping Config -->
+        <div class="bg-white/[0.03] border border-white/10 rounded-2xl p-4 space-y-2.5">
+          <label class="text-[11px] font-extrabold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-bell"></i>
+            <span>Telegram Ping Alert</span>
+          </label>
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-zinc-400 mb-1">Bot Token</label>
+            <input
+              id="tgBotTokenInput"
+              type="text"
+              placeholder="123456789:ABCdefGHIjklMNOpqrSTUvwxYZ"
+              class="w-full bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+            />
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-zinc-400 mb-1">Chat ID</label>
+            <input
+              id="tgChatIdInput"
+              type="text"
+              placeholder="e.g. 987654321"
+              class="w-full bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+            />
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-zinc-400 mb-1">Disguised Shopping Message</label>
+            <textarea
+              id="tgCustomTextInput"
+              rows="2"
+              class="w-full bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+            >VELOURA: Your shopping bag is ready for checkout.</textarea>
+          </div>
+          <button
+            type="button"
+            onclick="saveTelegramSettings()"
+            class="w-full py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-black text-xs font-black transition"
+          >
+            Save Telegram Config
+          </button>
+        </div>
+
+        <!-- Section 3: Optional Permanent Firebase Realtime DB URL -->
+        <div class="bg-white/[0.03] border border-white/10 rounded-2xl p-4 space-y-2.5">
+          <label class="text-[11px] font-extrabold uppercase tracking-wider text-sky-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-cloud"></i>
+            <span>Permanent Cloud Sync (Optional)</span>
+          </label>
+          <p class="text-[11px] text-zinc-400 leading-relaxed">
+            Offline messages already sync automatically via Cloud Mailbox + Backup. Optionally paste a free Firebase Realtime DB URL for permanent unlimited media history:
+          </p>
+          <input
+            id="firebaseUrlInput"
+            type="url"
+            placeholder="https://your-app-default-rtdb.firebaseio.com"
+            class="w-full bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-400"
+          />
+          <button
+            type="button"
+            onclick="saveFirebaseUrlSettings()"
+            class="w-full py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-200 text-xs font-black transition"
+          >
+            Save Cloud DB URL &amp; Sync Now
+          </button>
+        </div>
+
+        <!-- Section 4: Danger Zone - Wipe All Chats for Both -->
+        <div class="bg-red-500/[0.06] border border-red-500/25 rounded-2xl p-4 flex items-center justify-between gap-3">
+          <div>
+            <h4 class="text-xs font-bold text-red-400">Wipe All Chats for Both</h4>
+            <p class="text-[11px] text-zinc-400">Clears local &amp; cloud history on both devices</p>
+          </div>
+          <button
+            type="button"
+            onclick="toggleSettingsModal(false); toggleConfirmClearModal(true);"
+            class="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black flex items-center gap-1.5 flex-shrink-0 transition"
+          >
+            <i class="fa-solid fa-trash-can"></i>
+            <span>Wipe All</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODAL 2: CONFIRM WIPE ALL CHATS                                           -->
+    <!-- ========================================================================= -->
+    <div id="confirmClearModal" onclick="if(event.target===this) toggleConfirmClearModal(false)" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-[#161920] border border-red-500/30 rounded-3xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
+        <div class="w-12 h-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto">
+          <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+        </div>
+        <h3 class="font-black text-lg text-white">Wipe All Chats for Both?</h3>
+        <p class="text-xs text-zinc-400 leading-relaxed">
+          This permanently deletes all messages, photos, videos, and voice notes locally and in the cloud for both users.
+        </p>
+        <div class="flex items-center gap-3 pt-2">
+          <button type="button" onclick="toggleConfirmClearModal(false)" class="flex-1 py-2.5 rounded-xl bg-white/10 text-xs font-bold text-white">
+            Cancel
+          </button>
+          <button type="button" onclick="executeWipeAllMessages()" class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-xs font-black text-white">
+            Yes, Wipe All
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODAL 3: BUILT-IN CAMERA (PHOTO & VIDEO SNAP)                             -->
+    <!-- ========================================================================= -->
+    <div id="snapCameraModal" class="hidden fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-between p-4">
+      <div class="w-full max-w-md flex items-center justify-between">
+        <button type="button" onclick="closeSnapCameraModal()" class="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        <div class="flex items-center gap-2 bg-white/10 rounded-full p-1">
+          <button
+            id="camModePhotoBtn"
+            type="button"
+            onclick="switchCameraMode('photo')"
+            class="px-3.5 py-1 rounded-full text-xs font-bold transition bg-[#FFFC00] text-black"
+          >
+            Photo
+          </button>
+          <button
+            id="camModeVideoBtn"
+            type="button"
+            onclick="switchCameraMode('video')"
+            class="px-3.5 py-1 rounded-full text-xs font-bold transition text-white"
+          >
+            Video (10s)
+          </button>
+        </div>
+        <button type="button" onclick="flipSnapCamera()" class="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center" title="Switch Front/Back Camera">
+          <i class="fa-solid fa-camera-rotate"></i>
+        </button>
+      </div>
+
+      <!-- Camera Viewport / Captured Preview -->
+      <div class="relative w-full max-w-md aspect-[3/4] bg-zinc-900 rounded-3xl overflow-hidden border border-white/15 flex items-center justify-center shadow-2xl my-2">
+        <video id="cameraLiveVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
+
+        <div id="videoRecBadge" class="hidden absolute top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full flex items-center gap-1.5 animate-pulse">
+          <span class="w-2 h-2 rounded-full bg-white"></span>
+          <span id="videoRecTimer">REC 0:00 / 0:10</span>
+        </div>
+
+        <div id="capturedPreviewContainer" class="hidden absolute inset-0 bg-black flex items-center justify-center">
+          <img id="capturedImageEl" src="" alt="Preview" class="hidden w-full h-full object-contain" />
+          <video id="capturedVideoEl" controls autoplay loop playsinline class="hidden w-full h-full object-contain"></video>
+          <div class="absolute bottom-5 inset-x-4">
+            <input
+              id="snapCaptionInput"
+              type="text"
+              placeholder="Add a caption..."
+              class="w-full bg-black/75 backdrop-blur-md text-white text-center text-sm font-bold py-2.5 px-4 rounded-xl border border-white/20 focus:outline-none"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Shutter / Send Controls -->
+      <div class="w-full max-w-md flex items-center justify-center pb-2">
+        <div id="shutterControls">
+          <button
+            id="photoShutterBtn"
+            type="button"
+            onclick="capturePhotoSnap()"
+            class="w-16 h-16 p-1 rounded-full border-4 border-[#FFFC00] flex items-center justify-center active:scale-90 transition"
+          >
+            <div class="w-12 h-12 rounded-full bg-white"></div>
+          </button>
+          <button
+            id="videoStartBtn"
+            type="button"
+            onclick="startVideoSnapRecording()"
+            class="hidden w-16 h-16 p-1 rounded-full border-4 border-[#FF2A54] items-center justify-center active:scale-90 transition"
+          >
+            <div class="w-12 h-12 rounded-full bg-[#FF2A54]"></div>
+          </button>
+          <button
+            id="videoStopBtn"
+            type="button"
+            onclick="stopVideoSnapRecording()"
+            class="hidden w-16 h-16 p-1 rounded-full border-4 border-white items-center justify-center animate-pulse"
+          >
+            <div class="w-7 h-7 rounded-md bg-[#FF2A54]"></div>
+          </button>
+        </div>
+
+        <div id="sendSnapControls" class="hidden w-full flex items-center justify-between gap-3">
+          <button type="button" onclick="retakeSnap()" class="px-5 py-3 rounded-full bg-white/15 text-white text-sm font-bold">
+            Retake
+          </button>
+          <button
+            type="button"
+            onclick="confirmSendSnap()"
+            class="flex-1 py-3 rounded-full bg-[#00B2FF] hover:bg-[#0099db] text-white text-sm font-black flex items-center justify-center gap-2 shadow-lg"
+          >
+            <span>Send</span>
+            <i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- OVERLAY 4: INCOMING WEBRTC VOICE / VIDEO CALL                             -->
+    <!-- ========================================================================= -->
+    <div id="incomingCallOverlay" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex flex-col items-center justify-center p-6 text-center">
+      <div id="incomingCallerAvatar" class="w-24 h-24 rounded-full bg-gradient-to-tr from-[#FF2A54] to-[#00B2FF] flex items-center justify-center text-3xl font-black mb-4 animate-bounce shadow-2xl">
+        P
+      </div>
+      <h3 id="incomingCallerName" class="text-xl font-black text-white mb-1">Partner</h3>
+      <p id="incomingCallTypeLabel" class="text-sm text-[#FFFC00] font-bold uppercase tracking-wider mb-8">
+        Incoming Video Call...
+      </p>
+      <div class="flex items-center gap-7">
+        <button
+          type="button"
+          onclick="declineIncomingCall()"
+          class="w-16 h-16 rounded-full bg-red-600 hover:bg-red-500 flex items-center justify-center text-white shadow-lg"
+          title="Decline"
+        >
+          <i class="fa-solid fa-phone-slash text-xl"></i>
+        </button>
+        <button
+          type="button"
+          onclick="acceptIncomingCall()"
+          class="w-16 h-16 rounded-full bg-emerald-500 hover:bg-emerald-400 flex items-center justify-center text-white shadow-lg animate-pulse"
+          title="Accept"
+        >
+          <i id="incomingAcceptIcon" class="fa-solid fa-video text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- OVERLAY 5: ACTIVE WEBRTC VOICE / VIDEO CALL                               -->
+    <!-- ========================================================================= -->
+    <div id="activeCallOverlay" class="hidden fixed inset-0 bg-[#0B0D10] z-50 flex flex-col justify-between">
+      <div class="relative flex-1 bg-black flex items-center justify-center overflow-hidden">
+        <video id="remoteCallVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+
+        <!-- Audio / Ringing Placeholder -->
+        <div id="callAvatarPlaceholder" class="flex flex-col items-center justify-center text-center p-6">
+          <div id="activeCallAvatar" class="w-24 h-24 rounded-full bg-gradient-to-tr from-[#00B2FF] to-[#FF2A54] flex items-center justify-center text-3xl font-black mb-4 shadow-2xl">
+            P
+          </div>
+          <h3 id="activeCallPartnerName" class="text-xl font-black text-white">Partner</h3>
+          <p id="activeCallStatusSub" class="text-xs text-zinc-400 mt-1 uppercase tracking-widest">Calling...</p>
+        </div>
+
+        <!-- Local PiP Preview -->
+        <div id="localPipContainer" class="absolute top-4 right-4 w-28 sm:w-36 aspect-[3/4] rounded-2xl overflow-hidden border-2 border-white/30 bg-zinc-900 shadow-2xl">
+          <video id="localCallVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
+        </div>
+
+        <!-- Call Status Pill -->
+        <div class="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span id="callTimerPill" class="text-xs font-bold text-white">Ringing...</span>
+        </div>
+      </div>
+
+      <!-- Bottom Call Controls (Mute, Toggle Cam, Switch Cam, Hang Up) -->
+      <div class="bg-[#12151A] border-t border-white/10 py-4 px-6 flex items-center justify-center gap-4 sm:gap-5">
+        <button
+          id="callMuteBtn"
+          type="button"
+          onclick="toggleCallAudioMute()"
+          class="w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition"
+          title="Mute / Unmute"
+        >
+          <i id="callMuteIcon" class="fa-solid fa-microphone"></i>
+        </button>
+
+        <button
+          id="callVideoToggleBtn"
+          type="button"
+          onclick="toggleCallVideoTrack()"
+          class="w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition"
+          title="Camera On / Off"
+        >
+          <i id="callVideoIcon" class="fa-solid fa-video"></i>
+        </button>
+
+        <button
+          id="callSwitchCamBtn"
+          type="button"
+          onclick="switchActiveCallCamera()"
+          class="w-12 h-12 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition"
+          title="Switch Front / Back Camera"
+        >
+          <i class="fa-solid fa-camera-rotate"></i>
+        </button>
+
+        <button
+          type="button"
+          onclick="endActiveCall(true)"
+          class="w-14 h-14 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-lg"
+          title="End Call"
+        >
+          <i class="fa-solid fa-phone-slash text-lg"></i>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- COMPLETE STANDALONE JAVASCRIPT ENGINE                                     -->
+  <!-- ========================================================================= -->
+  <script>
+    // =========================================================================
+    // 1. CONSTANTS & STOREFRONT CATALOG
+    // =========================================================================
+    const SECRET_CODE = '18771877';
+    const CATEGORIES = ['All Collections', 'Apparel', 'Footwear', 'Accessories', 'Beauty', 'Tech'];
+    const REACTION_EMOJIS = ['❤️', '😂', '😮', '😢', '🔥', '👍'];
+
+    const PRODUCTS = [
+      {
+        id: 'prod-1',
+        name: 'Structured Cashmere Trench Coat',
+        category: 'Apparel',
+        price: 420,
+        originalPrice: 550,
+        rating: 4.9,
+        reviews: 128,
+        badge: 'Bestseller',
+        image: 'https://images.unsplash.com/photo-1539533018447-63fcce2678e3?auto=format&fit=crop&w=900&q=80',
+        colors: ['Camel', 'Obsidian', 'Ivory'],
+        sizes: ['XS', 'S', 'M', 'L'],
+        description: 'Tailored from double-faced Italian cashmere blend with a relaxed silhouette, storm flap, and belted waist.'
+      },
+      {
+        id: 'prod-2',
+        name: 'Minimalist Calfskin Crossbody Bag',
+        category: 'Accessories',
+        price: 295,
+        originalPrice: null,
+        rating: 4.8,
+        reviews: 94,
+        badge: 'New Arrival',
+        image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80',
+        colors: ['Noir', 'Cognac', 'Taupe'],
+        sizes: ['One Size'],
+        description: 'Handcrafted full-grain leather crossbody featuring brushed gold hardware and suede-lined compartments.'
+      },
+      {
+        id: 'prod-3',
+        name: 'Artisanal Chelsea Leather Boots',
+        category: 'Footwear',
+        price: 340,
+        originalPrice: 390,
+        rating: 4.9,
+        reviews: 215,
+        badge: 'Limited',
+        image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=900&q=80',
+        colors: ['Espresso', 'Black'],
+        sizes: ['38', '39', '40', '41', '42'],
+        description: 'Goodyear-welted ankle boots with shock-absorbing lug soles and weather-resistant Italian leather uppers.'
+      },
+      {
+        id: 'prod-4',
+        name: 'Chronograph Sapphire Steel Watch',
+        category: 'Accessories',
+        price: 580,
+        originalPrice: 690,
+        rating: 5.0,
+        reviews: 67,
+        badge: 'Exclusive',
+        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80',
+        colors: ['Silver/Black', 'Rose Gold'],
+        sizes: ['40mm'],
+        description: 'Precision Swiss quartz movement encased in 316L stainless steel with scratch-resistant sapphire crystal.'
+      },
+      {
+        id: 'prod-5',
+        name: 'Silk Charmeuse Evening Slip Dress',
+        category: 'Apparel',
+        price: 260,
+        originalPrice: null,
+        rating: 4.7,
+        reviews: 83,
+        badge: 'Trending',
+        image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=900&q=80',
+        colors: ['Champagne', 'Emerald', 'Onyx'],
+        sizes: ['XS', 'S', 'M', 'L'],
+        description: 'Bias-cut 22-momme mulberry silk slip dress with delicate adjustable straps and fluid drape.'
+      },
+      {
+        id: 'prod-6',
+        name: 'Acoustic ANC Studio Headphones',
+        category: 'Tech',
+        price: 385,
+        originalPrice: 430,
+        rating: 4.9,
+        reviews: 312,
+        badge: 'Top Rated',
+        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80',
+        colors: ['Matte Black', 'Sandstone'],
+        sizes: ['One Size'],
+        description: 'Spatial audio over-ear headphones with adaptive hybrid noise cancellation and 40-hour battery life.'
+      },
+      {
+        id: 'prod-7',
+        name: 'Botanical Elixir Cellular Serum',
+        category: 'Beauty',
+        price: 115,
+        originalPrice: null,
+        rating: 4.8,
+        reviews: 179,
+        badge: 'Clean Beauty',
+        image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80',
+        colors: ['50ml'],
+        sizes: ['50ml'],
+        description: 'Cold-pressed squalane, Bakuchiol, and Damascus rose extract designed to restore radiance and resilience.'
+      },
+      {
+        id: 'prod-8',
+        name: 'Polarized Acetate Aviator Sunglasses',
+        category: 'Accessories',
+        price: 195,
+        originalPrice: 230,
+        rating: 4.8,
+        reviews: 104,
+        badge: null,
+        image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=900&q=80',
+        colors: ['Tortoise', 'Jet Black'],
+        sizes: ['Standard'],
+        description: 'Hand-polished Mazzucchelli acetate frames fitted with UV400 anti-reflective polarized lenses.'
+      },
+      {
+        id: 'prod-9',
+        name: 'Monochrome Court Leather Sneakers',
+        category: 'Footwear',
+        price: 245,
+        originalPrice: null,
+        rating: 4.9,
+        reviews: 254,
+        badge: 'Essential',
+        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80',
+        colors: ['Crimson/White', 'All White', 'Onyx'],
+        sizes: ['39', '40', '41', '42', '43', '44'],
+        description: 'Low-profile architectural sneakers crafted in Portugal from supple nappa leather.'
+      },
+      {
+        id: 'prod-10',
+        name: 'Merino Wool Ribbed Knit Sweater',
+        category: 'Apparel',
+        price: 185,
+        originalPrice: 220,
+        rating: 4.7,
+        reviews: 91,
+        badge: null,
+        image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=900&q=80',
+        colors: ['Oatmeal', 'Charcoal', 'Forest'],
+        sizes: ['S', 'M', 'L', 'XL'],
+        description: 'Ultra-fine Australian merino wool sweater spun in a fisherman rib texture for breathable warmth.'
+      },
+      {
+        id: 'prod-11',
+        name: 'Velvet Oud Eau de Parfum 100ml',
+        category: 'Beauty',
+        price: 210,
+        originalPrice: null,
+        rating: 4.9,
+        reviews: 142,
+        badge: 'Signature',
+        image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=900&q=80',
+        colors: ['100ml'],
+        sizes: ['100ml'],
+        description: 'Warm amber, smoked sandalwood, cardamom, and wild saffron blended in Grasse, France.'
+      },
+      {
+        id: 'prod-12',
+        name: 'MagSafe Brushed Aluminum Power Bank',
+        category: 'Tech',
+        price: 129,
+        originalPrice: 159,
+        rating: 4.8,
+        reviews: 88,
+        badge: 'New',
+        image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=900&q=80',
+        colors: ['Space Gray', 'Silver'],
+        sizes: ['10,000mAh'],
+        description: 'Ultra-slim CNC-machined aluminum wireless fast charger with foldable kickstand and USB-C PD.'
+      }
+    ];
+
+    // Storefront State
+    let selectedCategory = 'All Collections';
+    let searchQuery = '';
+    let cart = [{ ...PRODUCTS[0], quantity: 1, selectedSize: 'M', selectedColor: 'Camel' }];
+    let wishlist = ['prod-2', 'prod-4'];
+    let checkoutSuccess = false;
+
+    // =========================================================================
+    // 2. VAULT & MULTI-LAYER OFFLINE SYNC STATE
+    // =========================================================================
+    let isVaultUnlocked = false;
+    // Temporary guard ONLY when native gallery picker or permission dialog is open
+    let suppressHideLockUntil = 0;
+
+    let myRole = 'partnerA';
+    let nicknames = { partnerA: 'Partner 1', partnerB: 'Partner 2' };
+    let telegramConfig = {
+      botToken: '',
+      chatId: '',
+      customText: 'VELOURA: Your shopping bag is ready for checkout.'
+    };
+    let firebaseRtdbUrl = '';
+
+    // Chat data + offline deletion/wipe tombstones
+    let messages = [];
+    let deletedMsgIds = new Set();
+    let globalWipeTimestamp = 0;
+    let myEditsMap = {};       // msgId -> { text, isEdited, updatedAt }
+    let myReactionsMap = {};   // msgId -> emoji
+
+    let replyingToMsg = null;
+    let editingMsg = null;
+    let activeMessageMenuId = null;
+    let longPressTimer = null;
+
+    // Partner live presence & keystroke state
+    let remotePartnerState = {
+      partnerA: { online: false, inChat: false, lastSeen: 0, typingText: '', typingUpdatedAt: 0 },
+      partnerB: { online: false, inChat: false, lastSeen: 0, typingText: '', typingUpdatedAt: 0 }
+    };
+    let prevPartnerStatus = null;
+
+    // MQTT + Ntfy + BroadcastChannel + Firebase RTDB Topics
+    const MQTT_BROKERS = [
+      'wss://broker.emqx.io:8084/mqtt',
+      'wss://broker.hivemq.com:8884/mqtt'
+    ];
+    let currentBrokerIdx = 0;
+    let mqttClient = null;
+    let mqttConnected = false;
+    let mqttFallbackTimer = null;
+
+    const TOPIC_LIVE = 'veloura/stealth18771877/v6/live';
+    const TOPIC_MAILBOX_PREFIX = 'veloura/stealth18771877/v6/mailbox/';
+    const TOPIC_RECEIPTS_PREFIX = 'veloura/stealth18771877/v6/receipts/';
+    const TOPIC_WIPE = 'veloura/stealth18771877/v6/wipe';
+    const NTFY_TOPIC_URL = 'https://ntfy.sh/veloura_18771877_sync_v6';
+
+    let broadcastChannel = null;
+    const processedNtfyIds = new Set();
+    const incomingMediaChunks = {};
+
+    // Camera / Voice / WebRTC State
+    let cameraMode = 'photo';
+    let cameraFacingMode = 'user';
+    let cameraStream = null;
+    let videoRecorder = null;
+    let videoChunks = [];
+    let videoRecordTimer = null;
+    let videoRecordSeconds = 0;
+    let recordedVideoMimeType = 'video/webm';
+    let capturedMediaObj = null;
+
+    let isRecordingVoice = false;
+    let voiceStream = null;
+    let voiceRecorder = null;
+    let voiceChunks = [];
+    let voiceTimerInterval = null;
+    let voiceSeconds = 0;
+
+    const RTC_CONFIG = {
+      iceServers: [
+        { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
+      ]
+    };
+    let peerConnection = null;
+    let localCallStream = null;
+    let remoteCallStream = null;
+    let currentCallState = null;
+    let currentCallType = 'video';
+    let activeCallFacingMode = 'user';
+    let activeCallId = null;
+    let incomingCallOfferData = null;
+    let isAudioMuted = false;
+    let isVideoTrackEnabled = true;
+    let callDurationSeconds = 0;
+    let callDurationInterval = null;
+
+    // =========================================================================
+    // 3. CRITICAL FIX #1: ZERO-FLASH SYNCHRONOUS LOCK / UNLOCK HANDLERS
+    // =========================================================================
+    function instantLockVault() {
+      // STEP 1 & 2: Synchronous class swap on <html>
+      document.documentElement.classList.add('vault-locked');
+      document.documentElement.classList.remove('vault-unlocked');
+
+      // STEP 3: Synchronous direct inline hide on #vault-overlay
+      const overlay = document.getElementById('vault-overlay');
+      if (overlay) {
+        overlay.style.display = 'none';
+        overlay.style.visibility = 'hidden';
+        overlay.style.opacity = '0';
+      }
+
+      // STEP 4: Force synchronous layout reflow so browser captures Storefront frame immediately
+      void document.body.offsetHeight;
+
+      const wasUnlocked = isVaultUnlocked;
+      isVaultUnlocked = false;
+      activeMessageMenuId = null;
+
+      // Clean up open modals and media streams
+      document.getElementById('settingsModal')?.classList.add('hidden');
+      document.getElementById('confirmClearModal')?.classList.add('hidden');
+      document.getElementById('snapCameraModal')?.classList.add('hidden');
+      document.getElementById('incomingCallOverlay')?.classList.add('hidden');
+      document.getElementById('activeCallOverlay')?.classList.add('hidden');
+
+      stopCameraStream();
+      if (isRecordingVoice) stopVoiceNote(false);
+      if (currentCallState) endActiveCall(true);
+
+      clearSearchInput();
+      if (wasUnlocked) {
+        broadcastPresence(false, '');
+      }
+    }
+
+    function unlockVault() {
+      isVaultUnlocked = true;
+      document.documentElement.classList.remove('vault-locked');
+      document.documentElement.classList.add('vault-unlocked');
+
+      const overlay = document.getElementById('vault-overlay');
+      if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.style.visibility = 'visible';
+        overlay.style.opacity = '1';
+      }
+
+      updateChatHeaderUI();
+      markPartnerMessagesSeen();
+      renderChatMessages();
+      scrollToChatBottom();
+      broadcastPresence(true, '');
+      pollNtfyBackup();
+      if (firebaseRtdbUrl) pullFromFirebaseRtdb();
+      sendSyncManifest();
+    }
+
+    // Native synchronous lifecycle listeners — NO window.blur lock (Smart Panel Safe!)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        if (Date.now() < suppressHideLockUntil) return;
+        instantLockVault();
+      } else if (document.visibilityState === 'visible') {
+        if (!isVaultUnlocked) {
+          // Double-confirm vault stays strictly hidden on resume
+          document.documentElement.classList.add('vault-locked');
+          const overlay = document.getElementById('vault-overlay');
+          if (overlay) {
+            overlay.style.display = 'none';
+            overlay.style.visibility = 'hidden';
+            overlay.style.opacity = '0';
+          }
+        } else {
+          markPartnerMessagesSeen();
+          pollNtfyBackup();
+        }
+      }
+    });
+
+    window.addEventListener('pagehide', () => {
+      if (Date.now() < suppressHideLockUntil) return;
+      instantLockVault();
+    });
+
+    document.addEventListener('freeze', () => {
+      instantLockVault();
+    });
+
+    window.addEventListener('beforeunload', () => {
+      instantLockVault();
+    });
+
+    window.addEventListener('pageshow', () => {
+      if (!isVaultUnlocked) {
+        instantLockVault();
+      }
+    });
+
+    document.addEventListener('resume', () => {
+      if (!isVaultUnlocked) {
+        instantLockVault();
+      }
+    });
+
+    // =========================================================================
+    // 4. LOCAL STORAGE + INDEXEDDB PERSISTENCE
+    // =========================================================================
+    const IDB_NAME = 'VelouraVaultDB_v6';
+    const IDB_STORE = 'messages_v6';
+    let idbRef = null;
+
+    function openVaultIDB() {
+      return new Promise((resolve) => {
+        if (idbRef) return resolve(idbRef);
+        if (!('indexedDB' in window)) return resolve(null);
+        try {
+          const req = indexedDB.open(IDB_NAME, 1);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(IDB_STORE)) {
+              db.createObjectStore(IDB_STORE, { keyPath: 'id' });
+            }
+          };
+          req.onsuccess = (e) => {
+            idbRef = e.target.result;
+            resolve(idbRef);
+          };
+          req.onerror = () => resolve(null);
+        } catch (e) {
+          resolve(null);
+        }
+      });
+    }
+
+    async function loadMessagesFromIDB() {
+      const db = await openVaultIDB();
+      if (db) {
+        return new Promise((resolve) => {
+          try {
+            const tx = db.transaction(IDB_STORE, 'readonly');
+            const req = tx.objectStore(IDB_STORE).getAll();
+            req.onsuccess = () => {
+              const arr = (req.result || []).filter(m => m && m.id && !deletedMsgIds.has(m.id) && (m.createdAt || 0) > globalWipeTimestamp);
+              arr.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+              resolve(arr);
+            };
+            req.onerror = () => resolve([]);
+          } catch (e) {
+            resolve([]);
+          }
+        });
+      }
+      try {
+        const raw = localStorage.getItem('veloura_msgs_v6');
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    async function persistMessagesLocally() {
+      const db = await openVaultIDB();
+      if (db) {
+        try {
+          const tx = db.transaction(IDB_STORE, 'readwrite');
+          const store = tx.objectStore(IDB_STORE);
+          store.clear();
+          messages.slice(-150).forEach((m) => store.put(m));
+        } catch (e) {}
+      }
+      try {
+        const compact = messages.slice(-80).filter(m => !m.mediaUrl || m.mediaUrl.length < 120000);
+        localStorage.setItem('veloura_msgs_v6', JSON.stringify(compact));
+      } catch (e) {}
+    }
+
+    function persistMetaLocally() {
+      try {
+        localStorage.setItem('veloura_meta_v6', JSON.stringify({
+          myRole,
+          nicknames,
+          telegramConfig,
+          firebaseRtdbUrl,
+          globalWipeTimestamp,
+          deletedMsgIds: Array.from(deletedMsgIds).slice(-200),
+          myEditsMap,
+          myReactionsMap
+        }));
+      } catch (e) {}
+    }
+
+    function loadMetaLocally() {
+      try {
+        const raw = localStorage.getItem('veloura_meta_v6');
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (parsed.myRole === 'partnerA' || parsed.myRole === 'partnerB') myRole = parsed.myRole;
+        if (parsed.nicknames) nicknames = { ...nicknames, ...parsed.nicknames };
+        if (parsed.telegramConfig) telegramConfig = { ...telegramConfig, ...parsed.telegramConfig };
+        if (typeof parsed.firebaseRtdbUrl === 'string') firebaseRtdbUrl = parsed.firebaseRtdbUrl;
+        if (typeof parsed.globalWipeTimestamp === 'number') globalWipeTimestamp = parsed.globalWipeTimestamp;
+        if (Array.isArray(parsed.deletedMsgIds)) deletedMsgIds = new Set(parsed.deletedMsgIds);
+        if (parsed.myEditsMap) myEditsMap = parsed.myEditsMap;
+        if (parsed.myReactionsMap) myReactionsMap = parsed.myReactionsMap;
+      } catch (e) {}
+    }
+
+    // =========================================================================
+    // 5. CRITICAL FIX #2: MULTI-LAYER OFFLINE CLOUD SYNC ENGINE
+    //    (MQTT Retained Mailboxes + ntfy.sh Backup + Optional Firebase RTDB + Peer Catch-Up)
+    // =========================================================================
+    function updateSyncStatusUI(state, label) {
+      const dot = document.getElementById('cloudSyncDot');
+      const txt = document.getElementById('cloudSyncText');
+      if (!dot || !txt) return;
+      txt.textContent = label;
+      if (state === 'connected') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
+      } else if (state === 'syncing') {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse';
+      } else {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-red-400';
+      }
+    }
+
+    function connectMqttBroker(brokerIndex) {
+      if (typeof mqtt === 'undefined') {
+        updateSyncStatusUI('syncing', 'Backup Sync');
+        return;
+      }
+
+      if (mqttClient) {
+        try { mqttClient.end(true); } catch (e) {}
+        mqttClient = null;
+      }
+
+      currentBrokerIdx = brokerIndex % MQTT_BROKERS.length;
+      const brokerUrl = MQTT_BROKERS[currentBrokerIdx];
+      updateSyncStatusUI('syncing', 'Syncing');
+
+      clearTimeout(mqttFallbackTimer);
+      mqttFallbackTimer = setTimeout(() => {
+        if (!mqttConnected) {
+          connectMqttBroker(currentBrokerIdx + 1);
+        }
+      }, 6500);
+
+      try {
+        const clientId = 'vl6_' + myRole + '_' + Math.random().toString(16).substring(2, 10);
+        mqttClient = mqtt.connect(brokerUrl, {
+          clientId,
+          clean: true,
+          connectTimeout: 5500,
+          reconnectPeriod: 3000,
+          keepalive: 30
+        });
+
+        mqttClient.on('connect', () => {
+          mqttConnected = true;
+          clearTimeout(mqttFallbackTimer);
+          updateSyncStatusUI('connected', 'Connected');
+
+          // Subscribe to Live + Retained Mailboxes + Retained Read Receipts + Retained Wipe
+          mqttClient.subscribe([
+            TOPIC_LIVE,
+            TOPIC_MAILBOX_PREFIX + '#',
+            TOPIC_RECEIPTS_PREFIX + '#',
+            TOPIC_WIPE
+          ], { qos: 1 });
+
+          // Publish our retained mailbox & presence immediately
+          publishRetainedMailbox();
+          publishRetainedReceipt();
+          broadcastPresence(isVaultUnlocked);
+          sendSyncManifest();
+        });
+
+        mqttClient.on('reconnect', () => {
+          mqttConnected = false;
+          updateSyncStatusUI('syncing', 'Reconnecting');
+        });
+
+        mqttClient.on('offline', () => {
+          mqttConnected = false;
+          updateSyncStatusUI('offline', 'Offline Queue');
+        });
+
+        mqttClient.on('error', () => {
+          mqttConnected = false;
+        });
+
+        mqttClient.on('message', (topic, payloadBuffer) => {
+          try {
+            const raw = payloadBuffer.toString();
+            if (!raw) return;
+            const data = JSON.parse(raw);
+
+            if (topic.startsWith(TOPIC_MAILBOX_PREFIX)) {
+              handleRetainedMailboxPacket(data);
+            } else if (topic.startsWith(TOPIC_RECEIPTS_PREFIX)) {
+              handleRetainedReceiptPacket(data);
+            } else if (topic === TOPIC_WIPE) {
+              handleGlobalWipeEvent(data.wipeTimestamp || 0);
+            } else if (topic === TOPIC_LIVE) {
+              handleIncomingLivePacket(data);
+            }
+          } catch (e) {}
+        });
+      } catch (e) {
+        updateSyncStatusUI('offline', 'Offline Queue');
+      }
+    }
+
+    // Build and publish RETAINED OFFLINE MAILBOX for myRole (survives sender going offline!)
+    function publishRetainedMailbox() {
+      if (!mqttClient || !mqttConnected) return;
+
+      // Gather recent messages authored by myRole, keeping payload safely under ~150KB
+      const myOwnMsgs = messages
+        .filter(m => m.senderRole === myRole && !deletedMsgIds.has(m.id) && (m.createdAt || 0) > globalWipeTimestamp)
+        .slice(-45);
+
+      const packedMsgs = [];
+      let totalSizeBytes = 0;
+      const MAX_MAILBOX_BYTES = 145000;
+
+      // Pack newest first so recent messages always fit cleanly
+      for (let i = myOwnMsgs.length - 1; i >= 0; i--) {
+        const m = myOwnMsgs[i];
+        let copy = {
+          id: m.id,
+          senderRole: m.senderRole,
+          senderName: m.senderName,
+          type: m.type,
+          text: m.text || '',
+          duration: m.duration || 0,
+          replyTo: m.replyTo || null,
+          isEdited: Boolean(m.isEdited),
+          createdAt: m.createdAt,
+          updatedAt: m.updatedAt || m.createdAt
+        };
+
+        // Include compressed images & audio notes directly in retained mailbox if within budget
+        if (m.mediaUrl) {
+          if (m.mediaUrl.length < 48000 && (totalSizeBytes + m.mediaUrl.length) < MAX_MAILBOX_BYTES) {
+            copy.mediaUrl = m.mediaUrl;
+          } else {
+            copy.hasLargeMedia = true;
+          }
+        }
+
+        const serializedLen = JSON.stringify(copy).length;
+        if (totalSizeBytes + serializedLen < MAX_MAILBOX_BYTES) {
+          packedMsgs.unshift(copy);
+          totalSizeBytes += serializedLen;
+        }
+      }
+
+      const mailboxPayload = {
+        senderRole: myRole,
+        nickname: nicknames[myRole],
+        updatedAt: Date.now(),
+        wipeTimestamp: globalWipeTimestamp,
+        deletedIds: Array.from(deletedMsgIds).slice(-120),
+        edits: myEditsMap,
+        reactions: myReactionsMap,
+        messages: packedMsgs
+      };
+
+      try {
+        mqttClient.publish(TOPIC_MAILBOX_PREFIX + myRole, JSON.stringify(mailboxPayload), {
+          qos: 1,
+          retain: true
+        });
+      } catch (e) {}
+    }
+
+    // Publish RETAINED READ RECEIPT for myRole (so sender sees blue ✓✓ بینرا even if sender was offline)
+    function publishRetainedReceipt() {
+      if (!mqttClient || !mqttConnected) return;
+      const other = getOtherRole();
+      const seenPartnerMsgs = messages.filter(m => m.senderRole === other && m.seen);
+      const lastSeenCreatedAt = seenPartnerMsgs.reduce((mx, m) => Math.max(mx, m.createdAt || 0), 0);
+      const seenIds = seenPartnerMsgs.slice(-60).map(m => m.id);
+
+      const receiptPayload = {
+        viewerRole: myRole,
+        lastSeenCreatedAt,
+        seenIds,
+        updatedAt: Date.now()
+      };
+
+      try {
+        mqttClient.publish(TOPIC_RECEIPTS_PREFIX + myRole, JSON.stringify(receiptPayload), {
+          qos: 1,
+          retain: true
+        });
+      } catch (e) {}
+    }
+
+    function handleRetainedMailboxPacket(mailbox) {
+      if (!mailbox || !mailbox.senderRole) return;
+      if (mailbox.wipeTimestamp && mailbox.wipeTimestamp > globalWipeTimestamp) {
+        handleGlobalWipeEvent(mailbox.wipeTimestamp);
+      }
+
+      let changed = false;
+
+      if (mailbox.nickname && mailbox.senderRole !== myRole && nicknames[mailbox.senderRole] !== mailbox.nickname) {
+        nicknames[mailbox.senderRole] = mailbox.nickname;
+        persistMetaLocally();
+        updateChatHeaderUI();
+      }
+
+      if (Array.isArray(mailbox.deletedIds)) {
+        mailbox.deletedIds.forEach(id => {
+          if (!deletedMsgIds.has(id)) {
+            deletedMsgIds.add(id);
+            changed = true;
+          }
+        });
+        const before = messages.length;
+        messages = messages.filter(m => !deletedMsgIds.has(m.id));
+        if (messages.length !== before) changed = true;
+      }
+
+      if (Array.isArray(mailbox.messages)) {
+        mailbox.messages.forEach(incoming => {
+          if (mergeSingleMessage(incoming)) changed = true;
+        });
+      }
+
+      // Merge remote edits
+      if (mailbox.edits && typeof mailbox.edits === 'object') {
+        Object.entries(mailbox.edits).forEach(([msgId, editObj]) => {
+          const target = messages.find(m => m.id === msgId);
+          if (target && editObj && (editObj.updatedAt || 0) >= (target.updatedAt || 0)) {
+            if (target.text !== editObj.text || !target.isEdited) {
+              target.text = editObj.text;
+              target.isEdited = true;
+              target.updatedAt = editObj.updatedAt;
+              changed = true;
+            }
+          }
+        });
+      }
+
+      // Merge remote reactions
+      if (mailbox.reactions && typeof mailbox.reactions === 'object') {
+        const reactor = mailbox.senderRole;
+        Object.entries(mailbox.reactions).forEach(([msgId, emoji]) => {
+          const target = messages.find(m => m.id === msgId);
+          if (target) {
+            if (!target.reactions) target.reactions = {};
+            if (emoji === null) {
+              if (target.reactions[reactor]) {
+                delete target.reactions[reactor];
+                changed = true;
+              }
+            } else if (target.reactions[reactor] !== emoji) {
+              target.reactions[reactor] = emoji;
+              changed = true;
+            }
+          }
+        });
+      }
+
+      if (changed) {
+        messages.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+        persistMetaLocally();
+        persistMessagesLocally();
+        if (isVaultUnlocked) {
+          markPartnerMessagesSeen();
+          renderChatMessages();
+          scrollToChatBottom();
+        }
+      }
+    }
+
+    function handleRetainedReceiptPacket(receipt) {
+      if (!receipt || receipt.viewerRole === myRole) return;
+      const seenSet = new Set(Array.isArray(receipt.seenIds) ? receipt.seenIds : []);
+      const cutoff = receipt.lastSeenCreatedAt || 0;
+      let changed = false;
+
+      messages.forEach(m => {
+        if (m.senderRole === myRole && !m.seen) {
+          if (seenSet.has(m.id) || (cutoff > 0 && (m.createdAt || 0) <= cutoff)) {
+            m.seen = true;
+            m.seenAt = receipt.updatedAt || Date.now();
+            changed = true;
+          }
+        }
+      });
+
+      if (changed) {
+        persistMessagesLocally();
+        if (isVaultUnlocked) renderChatMessages();
+      }
+    }
+
+    function handleGlobalWipeEvent(wipeTs) {
+      if (!wipeTs || wipeTs <= globalWipeTimestamp) return;
+      globalWipeTimestamp = wipeTs;
+      messages = messages.filter(m => (m.createdAt || 0) > globalWipeTimestamp);
+      myEditsMap = {};
+      myReactionsMap = {};
+      persistMetaLocally();
+      persistMessagesLocally();
+      if (isVaultUnlocked) renderChatMessages();
+    }
+
+    function mergeSingleMessage(incoming) {
+      if (!incoming || !incoming.id) return false;
+      if (deletedMsgIds.has(incoming.id)) return false;
+      if ((incoming.createdAt || 0) <= globalWipeTimestamp) return false;
+
+      const idx = messages.findIndex(m => m.id === incoming.id);
+      if (idx === -1) {
+        const cleanMsg = {
+          ...incoming,
+          reactions: incoming.reactions || {},
+          seen: Boolean(incoming.seen),
+          updatedAt: incoming.updatedAt || incoming.createdAt || Date.now()
+        };
+        messages.push(cleanMsg);
+        return true;
+      }
+
+      const existing = messages[idx];
+      let updated = false;
+
+      if ((incoming.updatedAt || 0) > (existing.updatedAt || 0)) {
+        if (incoming.text !== undefined && incoming.text !== existing.text) {
+          existing.text = incoming.text;
+          updated = true;
+        }
+        if (incoming.isEdited && !existing.isEdited) {
+          existing.isEdited = true;
+          updated = true;
+        }
+        existing.updatedAt = incoming.updatedAt;
+      }
+
+      if (incoming.mediaUrl && !existing.mediaUrl) {
+        existing.mediaUrl = incoming.mediaUrl;
+        existing.hasLargeMedia = false;
+        updated = true;
+      }
+
+      if (incoming.seen && !existing.seen) {
+        existing.seen = true;
+        existing.seenAt = incoming.seenAt || Date.now();
+        updated = true;
+      }
+
+      if (incoming.reactions) {
+        existing.reactions = { ...(existing.reactions || {}), ...incoming.reactions };
+      }
+
+      return updated;
+    }
+
+    // Secondary Cloud Offline Backup via ntfy.sh (CORS REST POST + Poll)
+    function publishToNtfyBackup(eventObj) {
+      try {
+        const payload = JSON.stringify(eventObj);
+        if (payload.length > 3600) return; // Keep ntfy payloads fast & within size limit
+        fetch(NTFY_TOPIC_URL, {
+          method: 'POST',
+          body: payload
+        }).catch(() => {});
+      } catch (e) {}
+    }
+
+    async function pollNtfyBackup() {
+      try {
+        const res = await fetch(`${NTFY_TOPIC_URL}/json?poll=1&since=all`);
+        if (!res.ok) return;
+        const text = await res.text();
+        if (!text.trim()) return;
+
+        const lines = text.trim().split('\n');
+        let changed = false;
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const wrapper = JSON.parse(line);
+            if (!wrapper || wrapper.event !== 'message' || !wrapper.message) continue;
+            if (processedNtfyIds.has(wrapper.id)) continue;
+            processedNtfyIds.add(wrapper.id);
+
+            const evt = JSON.parse(wrapper.message);
+            if (applyOfflineBackupEvent(evt)) changed = true;
+          } catch (e) {}
+        }
+
+        if (changed) {
+          messages.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+          persistMetaLocally();
+          persistMessagesLocally();
+          if (isVaultUnlocked) {
+            markPartnerMessagesSeen();
+            renderChatMessages();
+            scrollToChatBottom();
+          }
+        }
+      } catch (e) {}
+    }
+
+    function applyOfflineBackupEvent(evt) {
+      if (!evt || !evt.type) return false;
+      if (evt.type === 'WIPE_ALL') {
+        handleGlobalWipeEvent(evt.wipeTimestamp || evt.timestamp || 0);
+        return true;
+      }
+      if (evt.type === 'NEW_MESSAGE' && evt.message) {
+        return mergeSingleMessage(evt.message);
+      }
+      if (evt.type === 'EDIT_MESSAGE' && evt.msgId) {
+        const t = messages.find(m => m.id === evt.msgId);
+        if (t && (evt.updatedAt || 0) >= (t.updatedAt || 0)) {
+          t.text = evt.text;
+          t.isEdited = true;
+          t.updatedAt = evt.updatedAt;
+          return true;
+        }
+      }
+      if (evt.type === 'DELETE_MESSAGE' && evt.msgId) {
+        if (!deletedMsgIds.has(evt.msgId)) {
+          deletedMsgIds.add(evt.msgId);
+          messages = messages.filter(m => m.id !== evt.msgId);
+          return true;
+        }
+      }
+      if (evt.type === 'REACT_MESSAGE' && evt.msgId && evt.reactorRole) {
+        const t = messages.find(m => m.id === evt.msgId);
+        if (t) {
+          if (!t.reactions) t.reactions = {};
+          if (evt.emoji === null) delete t.reactions[evt.reactorRole];
+          else t.reactions[evt.reactorRole] = evt.emoji;
+          return true;
+        }
+      }
+      if (evt.type === 'MESSAGES_SEEN' && evt.viewerRole !== myRole) {
+        let c = false;
+        const setIds = new Set(evt.msgIds || []);
+        messages.forEach(m => {
+          if (m.senderRole === myRole && !m.seen && (setIds.has(m.id) || (evt.lastSeenCreatedAt && m.createdAt <= evt.lastSeenCreatedAt))) {
+            m.seen = true;
+            m.seenAt = evt.timestamp || Date.now();
+            c = true;
+          }
+        });
+        return c;
+      }
+      return false;
+    }
+
+    // Optional Permanent Firebase Realtime Database REST Sync
+    function normalizeFirebaseUrl(raw) {
+      const trimmed = (raw || '').trim().replace(/\/+$/, '');
+      if (!trimmed || !trimmed.startsWith('https://')) return '';
+      return trimmed;
+    }
+
+    async function pushMessageToFirebaseRtdb(msg) {
+      if (!firebaseRtdbUrl || !msg || !msg.id) return;
+      try {
+        await fetch(`${firebaseRtdbUrl}/veloura_18771877_v6/messages/${encodeURIComponent(msg.id)}.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(msg)
+        });
+      } catch (e) {}
+    }
+
+    async function deleteMessageInFirebaseRtdb(msgId) {
+      if (!firebaseRtdbUrl || !msgId) return;
+      try {
+        await fetch(`${firebaseRtdbUrl}/veloura_18771877_v6/messages/${encodeURIComponent(msgId)}.json`, {
+          method: 'DELETE'
+        });
+      } catch (e) {}
+    }
+
+    async function wipeFirebaseRtdb(wipeTs) {
+      if (!firebaseRtdbUrl) return;
+      try {
+        await fetch(`${firebaseRtdbUrl}/veloura_18771877_v6.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wipeTimestamp: wipeTs, messages: {} })
+        });
+      } catch (e) {}
+    }
+
+    async function pullFromFirebaseRtdb() {
+      if (!firebaseRtdbUrl) return;
+      try {
+        const res = await fetch(`${firebaseRtdbUrl}/veloura_18771877_v6.json`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data) return;
+
+        if (data.wipeTimestamp && data.wipeTimestamp > globalWipeTimestamp) {
+          handleGlobalWipeEvent(data.wipeTimestamp);
+        }
+
+        let changed = false;
+        if (data.messages && typeof data.messages === 'object') {
+          Object.values(data.messages).forEach(msg => {
+            if (mergeSingleMessage(msg)) changed = true;
+          });
+        }
+
+        if (changed) {
+          messages.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+          persistMessagesLocally();
+          if (isVaultUnlocked) {
+            markPartnerMessagesSeen();
+            renderChatMessages();
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Publish Live Packet across MQTT + Same-Browser BroadcastChannel
+    function publishLivePacket(packet) {
+      if (mqttClient && mqttConnected) {
+        try {
+          mqttClient.publish(TOPIC_LIVE, JSON.stringify(packet), { qos: 0 });
+        } catch (e) {}
+      }
+      if (broadcastChannel) {
+        try {
+          broadcastChannel.postMessage(packet);
+        } catch (e) {}
+      }
+    }
+
+    // Online Peer Catch-up Manifest (syncs large media/videos stored in IndexedDB)
+    function sendSyncManifest() {
+      const manifest = messages.slice(-60).map(m => ({
+        id: m.id,
+        hasMedia: Boolean(m.mediaUrl),
+        needsMedia: Boolean(m.hasLargeMedia && !m.mediaUrl)
+      }));
+      publishLivePacket({
+        type: 'SYNC_MANIFEST',
+        senderRole: myRole,
+        wipeTimestamp: globalWipeTimestamp,
+        knownIds: manifest.map(x => x.id),
+        needsMediaIds: manifest.filter(x => x.needsMedia).map(x => x.id)
+      });
+    }
+
+    async function publishChunkedMediaMessage(msg) {
+      const mediaUrl = msg.mediaUrl || '';
+      const CHUNK_SIZE = 34000;
+
+      if (mediaUrl.length <= CHUNK_SIZE) {
+        publishLivePacket({ type: 'NEW_MESSAGE', message: msg });
+        return;
+      }
+
+      const totalChunks = Math.ceil(mediaUrl.length / CHUNK_SIZE);
+      const banner = document.getElementById('mediaTransferBanner');
+      const bannerTxt = document.getElementById('mediaTransferText');
+      if (banner && bannerTxt && isVaultUnlocked) {
+        banner.classList.remove('hidden');
+      }
+
+      for (let i = 0; i < totalChunks; i++) {
+        const slice = mediaUrl.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+        if (bannerTxt) {
+          bannerTxt.textContent = `Sending media... ${Math.round(((i + 1) / totalChunks) * 100)}%`;
+        }
+        publishLivePacket({
+          type: 'MEDIA_CHUNK',
+          msgId: msg.id,
+          chunkIndex: i,
+          totalChunks,
+          chunkData: slice,
+          meta: i === 0 ? { ...msg, mediaUrl: '' } : null
+        });
+        await new Promise(r => setTimeout(r, 40));
+      }
+
+      if (banner) {
+        setTimeout(() => banner.classList.add('hidden'), 500);
+      }
+    }
+
+    function handleIncomingLivePacket(packet) {
+      if (!packet || !packet.type) return;
+
+      switch (packet.type) {
+        case 'PRESENCE': {
+          const role = packet.role;
+          if (!role || role === myRole) return;
+          remotePartnerState[role] = {
+            online: true,
+            inChat: Boolean(packet.inChat),
+            lastSeen: Date.now(),
+            typingText: packet.typingText || '',
+            typingUpdatedAt: Date.now()
+          };
+          if (packet.nickname && nicknames[role] !== packet.nickname) {
+            nicknames[role] = packet.nickname;
+            persistMetaLocally();
+          }
+          if (packet.inChat) {
+            let updated = false;
+            messages.forEach(m => {
+              if (m.senderRole === myRole && !m.seen) {
+                m.seen = true;
+                m.seenAt = Date.now();
+                updated = true;
+              }
+            });
+            if (updated) {
+              persistMessagesLocally();
+              if (isVaultUnlocked) renderChatMessages();
+            }
+          }
+          checkPartnerPresenceTransitions();
+          updateChatHeaderUI();
+          renderLiveTypingBubble();
+          break;
+        }
+
+        case 'SYNC_MANIFEST': {
+          if (packet.senderRole === myRole) return;
+          if (packet.wipeTimestamp && packet.wipeTimestamp > globalWipeTimestamp) {
+            handleGlobalWipeEvent(packet.wipeTimestamp);
+          }
+          const peerKnown = new Set(packet.knownIds || []);
+          const peerNeedsMedia = new Set(packet.needsMediaIds || []);
+          // Stream any missing messages or large media from our local IndexedDB
+          const toShare = messages.filter(m =>
+            (!peerKnown.has(m.id) && m.createdAt > globalWipeTimestamp) ||
+            (peerNeedsMedia.has(m.id) && m.mediaUrl)
+          ).slice(-15);
+
+          toShare.forEach((m, idx) => {
+            setTimeout(() => {
+              publishChunkedMediaMessage(m);
+            }, idx * 180);
+          });
+          break;
+        }
+
+        case 'NEW_MESSAGE': {
+          const msg = packet.message;
+          if (!msg || !msg.id) return;
+          if (mergeSingleMessage(msg)) {
+            messages.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+            if (isVaultUnlocked && document.visibilityState === 'visible' && msg.senderRole !== myRole) {
+              markPartnerMessagesSeen();
+            }
+            persistMessagesLocally();
+            if (isVaultUnlocked) {
+              renderChatMessages();
+              scrollToChatBottom();
+            }
+          }
+          break;
+        }
+
+        case 'MEDIA_CHUNK': {
+          const { msgId, chunkIndex, totalChunks, chunkData, meta } = packet;
+          if (!msgId) return;
+          const existing = messages.find(m => m.id === msgId);
+          if (existing && existing.mediaUrl) return;
+
+          if (!incomingMediaChunks[msgId]) {
+            incomingMediaChunks[msgId] = {
+              totalChunks,
+              receivedCount: 0,
+              chunks: new Array(totalChunks),
+              meta: null
+            };
+          }
+          const entry = incomingMediaChunks[msgId];
+          if (meta) entry.meta = meta;
+          if (entry.chunks[chunkIndex] === undefined) {
+            entry.chunks[chunkIndex] = chunkData;
+            entry.receivedCount++;
+          }
+
+          const banner = document.getElementById('mediaTransferBanner');
+          const bannerTxt = document.getElementById('mediaTransferText');
+          if (banner && bannerTxt && isVaultUnlocked) {
+            banner.classList.remove('hidden');
+            bannerTxt.textContent = `Receiving media... ${Math.round((entry.receivedCount / entry.totalChunks) * 100)}%`;
+          }
+
+          if (entry.receivedCount >= entry.totalChunks && entry.meta) {
+            const fullUrl = entry.chunks.join('');
+            const completeMsg = { ...entry.meta, mediaUrl: fullUrl, hasLargeMedia: false };
+            delete incomingMediaChunks[msgId];
+            if (banner) banner.classList.add('hidden');
+
+            if (mergeSingleMessage(completeMsg)) {
+              messages.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+              if (isVaultUnlocked && document.visibilityState === 'visible' && completeMsg.senderRole !== myRole) {
+                markPartnerMessagesSeen();
+              }
+              persistMessagesLocally();
+              if (isVaultUnlocked) {
+                renderChatMessages();
+                scrollToChatBottom();
+              }
+            }
+          }
+          break;
+        }
+
+        case 'EDIT_MESSAGE': {
+          if (applyOfflineBackupEvent(packet)) {
+            persistMessagesLocally();
+            if (isVaultUnlocked) renderChatMessages();
+          }
+          break;
+        }
+
+        case 'REACT_MESSAGE': {
+          if (applyOfflineBackupEvent(packet)) {
+            persistMessagesLocally();
+            if (isVaultUnlocked) renderChatMessages();
+          }
+          break;
+        }
+
+        case 'DELETE_MESSAGE': {
+          if (applyOfflineBackupEvent(packet)) {
+            persistMetaLocally();
+            persistMessagesLocally();
+            if (isVaultUnlocked) renderChatMessages();
+          }
+          break;
+        }
+
+        case 'MESSAGES_SEEN': {
+          if (applyOfflineBackupEvent(packet)) {
+            persistMessagesLocally();
+            if (isVaultUnlocked) renderChatMessages();
+          }
+          break;
+        }
+
+        case 'WIPE_ALL': {
+          handleGlobalWipeEvent(packet.wipeTimestamp || Date.now());
+          break;
+        }
+
+        case 'STEALTH_PING': {
+          if (packet.senderRole !== myRole) {
+            showStoreToast(packet.text || 'VELOURA: Your shopping bag is ready for checkout.');
+            if (isVaultUnlocked) {
+              showPresenceBanner(`🔔 ${nicknames[packet.senderRole] || 'Partner'} sent a Ping`);
+            }
+          }
+          break;
+        }
+
+        case 'WEBRTC_SIGNAL': {
+          handleIncomingWebRTCSignal(packet);
+          break;
+        }
+      }
+    }
+
+    async function initSyncSystem() {
+      loadMetaLocally();
+      messages = await loadMessagesFromIDB();
+
+      try {
+        if ('BroadcastChannel' in window) {
+          broadcastChannel = new BroadcastChannel('veloura_sync_18771877_v6');
+          broadcastChannel.onmessage = (ev) => {
+            if (ev.data) handleIncomingLivePacket(ev.data);
+          };
+        }
+      } catch (e) {}
+
+      // Start MQTT with automatic broker fallback
+      connectMqttBroker(0);
+
+      // Immediately poll ntfy backup + optional Firebase RTDB for offline messages
+      pollNtfyBackup();
+      if (firebaseRtdbUrl) pullFromFirebaseRtdb();
+
+      // Heartbeat & periodic offline backup sync
+      setInterval(() => {
+        broadcastPresence(isVaultUnlocked);
+        updateChatHeaderUI();
+      }, 5000);
+
+      setInterval(() => {
+        pollNtfyBackup();
+        if (firebaseRtdbUrl) pullFromFirebaseRtdb();
+      }, 9000);
+    }
+
+    // =========================================================================
+    // 6. STOREFRONT SEARCH & SECRET UNLOCK (`18771877` / `١٨٧٧١٨٧٧`)
+    // =========================================================================
+    function normalizeDigits(raw) {
+      if (!raw) return '';
+      const ar = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+      const fa = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+      let out = String(raw);
+      for (let i = 0; i < 10; i++) {
+        out = out.split(ar[i]).join(String(i)).split(fa[i]).join(String(i));
+      }
+      return out;
+    }
+
+    function checkSecretCode(rawVal) {
+      const digitsOnly = normalizeDigits(rawVal).replace(/\s+/g, '');
+      if (digitsOnly === SECRET_CODE || digitsOnly.includes(SECRET_CODE)) {
+        const inputEl = document.getElementById('storeSearchInput');
+        if (inputEl) {
+          inputEl.value = '';
+          inputEl.blur();
+        }
+        searchQuery = '';
+        document.getElementById('storeSearchClearBtn')?.classList.add('hidden');
+        renderProducts();
+        unlockVault();
+        return true;
+      }
+      return false;
+    }
+
+    function handleSearchInput(val) {
+      document.getElementById('storeSearchClearBtn')?.classList.toggle('hidden', !val);
+      if (checkSecretCode(val)) return;
+      searchQuery = normalizeDigits(val).trim();
+      renderProducts();
+    }
+
+    function handleSearchKeyup(e, val) {
+      if (checkSecretCode(val)) return;
+      if (e && (e.key === 'Enter' || e.keyCode === 13) && searchQuery) {
+        document.getElementById('catalogSection')?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function handleSearchSubmit(e) {
+      if (e) e.preventDefault();
+      const val = document.getElementById('storeSearchInput')?.value || '';
+      if (checkSecretCode(val)) return;
+      searchQuery = normalizeDigits(val).trim();
+      renderProducts();
+      document.getElementById('catalogSection')?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function clearSearchInput() {
+      const inputEl = document.getElementById('storeSearchInput');
+      if (inputEl) inputEl.value = '';
+      searchQuery = '';
+      document.getElementById('storeSearchClearBtn')?.classList.add('hidden');
+      renderProducts();
+    }
+
+    // =========================================================================
+    // 7. STOREFRONT RENDERING & INTERACTIONS
+    // =========================================================================
+    function renderCategoryPills() {
+      const nav = document.getElementById('categoryPillNav');
+      if (!nav) return;
+      nav.innerHTML = CATEGORIES.map(cat => {
+        const active = selectedCategory === cat;
+        return `
+          <button
+            type="button"
+            onclick="selectCategory('${cat}')"
+            class="px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition ${
+              active ? 'bg-stone-900 text-white shadow-xs' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+            }"
+          >
+            ${cat}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectCategory(cat) {
+      selectedCategory = cat;
+      renderCategoryPills();
+      renderProducts();
+    }
+
+    function resetStoreFilters(e) {
+      if (e) e.preventDefault();
+      selectedCategory = 'All Collections';
+      clearSearchInput();
+      renderCategoryPills();
+      renderProducts();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('productGrid');
+      const titleEl = document.getElementById('catalogTitle');
+      const countEl = document.getElementById('catalogCount');
+      const heroEl = document.getElementById('heroSection');
+
+      if (heroEl) heroEl.classList.toggle('hidden', Boolean(searchQuery));
+
+      const q = searchQuery.toLowerCase();
+      const filtered = PRODUCTS.filter(p => {
+        const matchesCat = selectedCategory === 'All Collections' || p.category === selectedCategory;
+        const matchesQuery = !q ||
+          p.name.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q);
+        return matchesCat && matchesQuery;
+      });
+
+      if (titleEl) {
+        titleEl.textContent = searchQuery ? `Results for "${searchQuery}"` : selectedCategory;
+      }
+      if (countEl) {
+        countEl.innerHTML = `Showing <strong class="text-stone-900">${filtered.length}</strong> curated pieces`;
+      }
+      if (!grid) return;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full bg-white rounded-3xl border border-stone-200 p-12 text-center my-4">
+            <i class="fa-solid fa-magnifying-glass text-2xl text-stone-300 mb-3"></i>
+            <p class="text-base font-semibold text-stone-800 mb-1">No pieces matched "${escapeHtml(searchQuery)}"</p>
+            <p class="text-xs text-stone-400 mb-5">Try searching for cashmere, leather, watch, or browse all collections.</p>
+            <button type="button" onclick="resetStoreFilters(event)" class="px-6 py-2.5 rounded-full bg-stone-900 text-white text-xs font-bold">
+              Show All Products
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(product => {
+        const isWishlisted = wishlist.includes(product.id);
+        return `
+          <div class="group bg-white rounded-2xl border border-stone-200/80 overflow-hidden shadow-xs hover:shadow-xl transition flex flex-col">
+            <div class="relative aspect-[4/5] bg-stone-100 overflow-hidden">
+              <img
+                src="${product.image}"
+                alt="${escapeHtml(product.name)}"
+                onerror="this.src='https://placehold.co/600x750/f5f5f4/292524?text=VELOURA'"
+                class="w-full h-full object-cover group-hover:scale-105 transition duration-500 cursor-pointer"
+                onclick="openQuickView('${product.id}')"
+              />
+              ${product.badge ? `
+                <span class="absolute top-3 left-3 bg-stone-900 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full">
+                  ${product.badge}
+                </span>
+              ` : ''}
+              <button
+                type="button"
+                onclick="toggleWishlistItem('${product.id}')"
+                class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 hover:bg-white flex items-center justify-center text-stone-700 shadow transition"
+              >
+                <i class="${isWishlisted ? 'fa-solid text-red-500' : 'fa-regular'} fa-heart text-sm"></i>
+              </button>
+              <div class="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition duration-200 hidden sm:flex gap-2">
+                <button
+                  type="button"
+                  onclick="addToCart('${product.id}')"
+                  class="flex-1 bg-stone-900/95 hover:bg-stone-900 text-white text-xs font-semibold py-2.5 rounded-xl shadow-lg"
+                >
+                  + Add to Bag
+                </button>
+                <button
+                  type="button"
+                  onclick="openQuickView('${product.id}')"
+                  class="px-3 py-2.5 bg-white/95 hover:bg-white text-stone-900 rounded-xl shadow-lg"
+                >
+                  <i class="fa-regular fa-eye text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="p-4 flex-1 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between text-[11px] text-stone-400 font-medium mb-1">
+                  <span>${product.category}</span>
+                  <span class="flex items-center gap-1 text-stone-700 font-semibold">
+                    <i class="fa-solid fa-star text-amber-400 text-[10px]"></i>
+                    ${product.rating} (${product.reviews})
+                  </span>
+                </div>
+                <h3 onclick="openQuickView('${product.id}')" class="font-semibold text-sm text-stone-900 group-hover:text-stone-600 cursor-pointer line-clamp-1">
+                  ${escapeHtml(product.name)}
+                </h3>
+              </div>
+
+              <div class="mt-3 pt-2.5 border-t border-stone-100 flex items-center justify-between">
+                <div class="flex items-baseline gap-2">
+                  <span class="font-bold text-base text-stone-900">$${product.price}</span>
+                  ${product.originalPrice ? `<span class="text-xs text-stone-400 line-through">$${product.originalPrice}</span>` : ''}
+                </div>
+                <button type="button" onclick="addToCart('${product.id}')" class="px-3 py-1.5 rounded-full bg-stone-900 text-white text-xs font-semibold sm:hidden">
+                  + Add
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function showStoreToast(text) {
+      const toast = document.getElementById('storeToast');
+      const txt = document.getElementById('storeToastText');
+      if (!toast || !txt) return;
+      txt.textContent = text;
+      toast.classList.remove('hidden');
+      clearTimeout(window._storeToastTimer);
+      window._storeToastTimer = setTimeout(() => toast.classList.add('hidden'), 4200);
+    }
+
+    function hideStoreToast() {
+      document.getElementById('storeToast')?.classList.add('hidden');
+    }
+
+    function addToCart(prodId, size, color) {
+      const product = PRODUCTS.find(p => p.id === prodId);
+      if (!product) return;
+      const selSize = size || product.sizes[0];
+      const selColor = color || product.colors[0];
+      const existing = cart.find(i => i.id === prodId && i.selectedSize === selSize && i.selectedColor === selColor);
+      if (existing) existing.quantity += 1;
+      else cart.push({ ...product, quantity: 1, selectedSize: selSize, selectedColor: selColor });
+      checkoutSuccess = false;
+      updateStoreBadges();
+      showStoreToast(`Added "${product.name}" to your shopping bag.`);
+    }
+
+    function updateCartQty(idx, delta) {
+      if (!cart[idx]) return;
+      cart[idx].quantity += delta;
+      if (cart[idx].quantity <= 0) cart.splice(idx, 1);
+      updateStoreBadges();
+      renderCartDrawer();
+    }
+
+    function toggleWishlistItem(prodId) {
+      if (wishlist.includes(prodId)) wishlist = wishlist.filter(id => id !== prodId);
+      else wishlist.push(prodId);
+      updateStoreBadges();
+      renderProducts();
+      renderWishlistDrawer();
+    }
+
+    function updateStoreBadges() {
+      const cartBadge = document.getElementById('cartCountBadge');
+      const wishBadge = document.getElementById('wishlistBadge');
+      const totalCart = cart.reduce((s, i) => s + i.quantity, 0);
+      if (cartBadge) cartBadge.textContent = `(${totalCart})`;
+      if (wishBadge) {
+        wishBadge.textContent = String(wishlist.length);
+        wishBadge.classList.toggle('hidden', wishlist.length === 0);
+      }
+    }
+
+    function openQuickView(prodId) {
+      const product = PRODUCTS.find(p => p.id === prodId);
+      if (!product) return;
+      const modal = document.getElementById('quickViewModal');
+      const content = document.getElementById('quickViewContent');
+      if (!modal || !content) return;
+
+      content.innerHTML = `
+        <button type="button" onclick="closeQuickView()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-stone-800 shadow z-10">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="aspect-[4/5] sm:aspect-auto bg-stone-100">
+          <img src="${product.image}" alt="${escapeHtml(product.name)}" onerror="this.src='https://placehold.co/600x750/f5f5f4/292524?text=VELOURA'" class="w-full h-full object-cover" />
+        </div>
+        <div class="p-6 flex flex-col justify-between space-y-4">
+          <div>
+            <span class="text-xs uppercase tracking-widest text-stone-400 font-semibold">${product.category}</span>
+            <h3 class="text-xl font-serif-luxury font-bold text-stone-900 mt-1">${escapeHtml(product.name)}</h3>
+            <div class="flex items-center gap-2 mt-2">
+              <span class="text-lg font-bold text-stone-900">$${product.price}</span>
+              ${product.originalPrice ? `<span class="text-sm text-stone-400 line-through">$${product.originalPrice}</span>` : ''}
+            </div>
+            <p class="text-xs text-stone-600 leading-relaxed mt-4">${escapeHtml(product.description)}</p>
+            <div class="mt-4">
+              <span class="block text-[11px] font-bold uppercase text-stone-400 mb-1.5">Available Finishes</span>
+              <div class="flex flex-wrap gap-1.5">
+                ${product.colors.map(c => `<span class="px-2.5 py-1 rounded-md border border-stone-200 text-xs font-medium text-stone-700">${c}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+          <button type="button" onclick="addToCart('${product.id}'); closeQuickView();" class="w-full py-3.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider transition">
+            Add to Shopping Bag — $${product.price}
+          </button>
+        </div>
+      `;
+      modal.classList.remove('hidden');
+    }
+
+    function closeQuickView() {
+      document.getElementById('quickViewModal')?.classList.add('hidden');
+    }
+
+    function toggleCartDrawer(show) {
+      const drawer = document.getElementById('cartDrawer');
+      if (!drawer) return;
+      if (show) {
+        renderCartDrawer();
+        drawer.classList.remove('hidden');
+      } else {
+        drawer.classList.add('hidden');
+        checkoutSuccess = false;
+      }
+    }
+
+    function renderCartDrawer() {
+      const container = document.getElementById('cartItemsContainer');
+      const footer = document.getElementById('cartFooter');
+      if (!container || !footer) return;
+
+      if (checkoutSuccess) {
+        container.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
+            <div class="w-14 h-14 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+              <i class="fa-solid fa-check text-2xl"></i>
+            </div>
+            <h4 class="font-serif-luxury font-bold text-xl text-stone-900">Order Confirmed</h4>
+            <p class="text-xs text-stone-500 leading-relaxed">
+              Thank you for shopping with VELOURA. Your order #VL-90418 is being prepared for priority dispatch.
+            </p>
+          </div>
+        `;
+        footer.innerHTML = '';
+        return;
+      }
+
+      if (cart.length === 0) {
+        container.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-center text-stone-400">
+            <i class="fa-solid fa-bag-shopping text-3xl mb-2"></i>
+            <p class="text-sm font-medium text-stone-600">Your shopping bag is empty</p>
+          </div>
+        `;
+        footer.innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = cart.map((item, idx) => `
+        <div class="flex gap-3.5 pb-4 border-b border-stone-100">
+          <img src="${item.image}" alt="${escapeHtml(item.name)}" class="w-20 h-24 rounded-xl object-cover bg-stone-100 flex-shrink-0" />
+          <div class="flex-1 flex flex-col justify-between">
+            <div>
+              <h4 class="text-xs font-bold text-stone-900">${escapeHtml(item.name)}</h4>
+              <p class="text-[11px] text-stone-400 mt-0.5">${item.selectedColor} • ${item.selectedSize}</p>
+            </div>
+            <div class="flex items-center justify-between mt-2">
+              <div class="flex items-center border border-stone-200 rounded-lg">
+                <button type="button" onclick="updateCartQty(${idx}, -1)" class="px-2.5 py-1 text-stone-500 hover:text-stone-900 text-xs">-</button>
+                <span class="px-2.5 text-xs font-semibold">${item.quantity}</span>
+                <button type="button" onclick="updateCartQty(${idx}, 1)" class="px-2.5 py-1 text-stone-500 hover:text-stone-900 text-xs">+</button>
+              </div>
+              <span class="text-xs font-bold text-stone-900">$${item.price * item.quantity}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+      footer.innerHTML = `
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-stone-500">Subtotal</span>
+          <span class="font-bold text-stone-900">$${subtotal}</span>
+        </div>
+        <div class="flex items-center justify-between text-xs text-stone-500">
+          <span>Express Shipping</span>
+          <span>${subtotal >= 250 ? 'Complimentary' : '$20'}</span>
+        </div>
+        <button type="button" onclick="completeStoreCheckout()" class="w-full py-3.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider transition">
+          Proceed to Checkout • $${subtotal >= 250 ? subtotal : subtotal + 20}
+        </button>
+      `;
+    }
+
+    function completeStoreCheckout() {
+      checkoutSuccess = true;
+      cart = [];
+      updateStoreBadges();
+      renderCartDrawer();
+    }
+
+    function toggleWishlistDrawer(show) {
+      const drawer = document.getElementById('wishlistDrawer');
+      if (!drawer) return;
+      if (show) {
+        renderWishlistDrawer();
+        drawer.classList.remove('hidden');
+      } else {
+        drawer.classList.add('hidden');
+      }
+    }
+
+    function renderWishlistDrawer() {
+      const container = document.getElementById('wishlistItemsContainer');
+      if (!container) return;
+      const items = PRODUCTS.filter(p => wishlist.includes(p.id));
+      if (items.length === 0) {
+        container.innerHTML = `<p class="text-center text-xs text-stone-400 py-12">No saved pieces in your wishlist yet.</p>`;
+        return;
+      }
+      container.innerHTML = items.map(item => `
+        <div class="flex items-center gap-3.5 pb-4 border-b border-stone-100">
+          <img src="${item.image}" alt="${escapeHtml(item.name)}" class="w-16 h-20 rounded-xl object-cover bg-stone-100" />
+          <div class="flex-1">
+            <h4 class="text-xs font-bold text-stone-900">${escapeHtml(item.name)}</h4>
+            <p class="text-xs text-stone-500 mt-0.5">$${item.price}</p>
+            <button type="button" onclick="addToCart('${item.id}'); toggleWishlistDrawer(false);" class="mt-2 text-[11px] font-bold text-stone-900 underline">
+              Move to Bag
+            </button>
+          </div>
+          <button type="button" onclick="toggleWishlistItem('${item.id}')" class="text-stone-400 hover:text-red-500 p-1">
+            <i class="fa-solid fa-trash-can text-xs"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function handleNewsletterSubmit(e) {
+      e.preventDefault();
+      document.getElementById('newsletterInput').value = '';
+      document.getElementById('newsletterSuccess')?.classList.remove('hidden');
+    }
+
+    // =========================================================================
+    // 8. CHAT SETTINGS, PRESENCE & LIVE KEYSTROKE SYNC
+    // =========================================================================
+    function getOtherRole() {
+      return myRole === 'partnerA' ? 'partnerB' : 'partnerA';
+    }
+
+    function toggleSettingsModal(show) {
+      const modal = document.getElementById('settingsModal');
+      if (!modal) return;
+      if (show) {
+        updateSettingsModalUI();
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function updateSettingsModalUI() {
+      const btnA = document.getElementById('roleSelectBtnA');
+      const btnB = document.getElementById('roleSelectBtnB');
+      document.getElementById('roleBtnLabelA').textContent = nicknames.partnerA || 'Partner 1';
+      document.getElementById('roleBtnLabelB').textContent = nicknames.partnerB || 'Partner 2';
+
+      if (myRole === 'partnerA') {
+        btnA.className = 'py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 border-2 border-[#FF2A54] bg-[#FF2A54]/20 text-white transition';
+        btnB.className = 'py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border border-white/10 bg-white/5 text-zinc-400 transition';
+      } else {
+        btnB.className = 'py-2.5 px-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 border-2 border-[#00B2FF] bg-[#00B2FF]/20 text-white transition';
+        btnA.className = 'py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border border-white/10 bg-white/5 text-zinc-400 transition';
+      }
+
+      document.getElementById('settingsNameAInput').value = nicknames.partnerA || 'Partner 1';
+      document.getElementById('settingsNameBInput').value = nicknames.partnerB || 'Partner 2';
+      document.getElementById('tgBotTokenInput').value = telegramConfig.botToken || '';
+      document.getElementById('tgChatIdInput').value = telegramConfig.chatId || '';
+      document.getElementById('tgCustomTextInput').value = telegramConfig.customText || 'VELOURA: Your shopping bag is ready for checkout.';
+      document.getElementById('firebaseUrlInput').value = firebaseRtdbUrl || '';
+    }
+
+    function selectMyRole(role) {
+      myRole = role;
+      prevPartnerStatus = null;
+      persistMetaLocally();
+      updateSettingsModalUI();
+      updateChatHeaderUI();
+      markPartnerMessagesSeen();
+      renderChatMessages();
+      renderLiveTypingBubble();
+      broadcastPresence(isVaultUnlocked);
+      publishRetainedMailbox();
+      publishRetainedReceipt();
+    }
+
+    function saveNicknamesFromSettings() {
+      const nA = (document.getElementById('settingsNameAInput')?.value || '').trim() || 'Partner 1';
+      const nB = (document.getElementById('settingsNameBInput')?.value || '').trim() || 'Partner 2';
+      nicknames.partnerA = nA;
+      nicknames.partnerB = nB;
+      persistMetaLocally();
+      updateSettingsModalUI();
+      updateChatHeaderUI();
+      broadcastPresence(isVaultUnlocked);
+      publishRetainedMailbox();
+      showShortToast('✓ Saved');
+    }
+
+    function saveTelegramSettings() {
+      telegramConfig.botToken = (document.getElementById('tgBotTokenInput')?.value || '').trim();
+      telegramConfig.chatId = (document.getElementById('tgChatIdInput')?.value || '').trim();
+      telegramConfig.customText = (document.getElementById('tgCustomTextInput')?.value || '').trim() || 'VELOURA: Your shopping bag is ready for checkout.';
+      persistMetaLocally();
+      toggleSettingsModal(false);
+      showShortToast('✓ Telegram Saved');
+    }
+
+    function saveFirebaseUrlSettings() {
+      firebaseRtdbUrl = normalizeFirebaseUrl(document.getElementById('firebaseUrlInput')?.value || '');
+      persistMetaLocally();
+      toggleSettingsModal(false);
+      if (firebaseRtdbUrl) {
+        pullFromFirebaseRtdb();
+        messages.slice(-40).forEach(m => pushMessageToFirebaseRtdb(m));
+        showShortToast('✓ Cloud DB Connected');
+      } else {
+        showShortToast('✓ Cloud DB Cleared');
+      }
+    }
+
+    function broadcastPresence(inChatNow, explicitTyping) {
+      const inputEl = document.getElementById('chatMessageInput');
+      const currentTyping = explicitTyping !== undefined
+        ? explicitTyping
+        : (inChatNow && inputEl ? inputEl.value : '');
+
+      publishLivePacket({
+        type: 'PRESENCE',
+        role: myRole,
+        nickname: nicknames[myRole],
+        inChat: Boolean(inChatNow),
+        typingText: currentTyping,
+        timestamp: Date.now()
+      });
+    }
+
+    function checkPartnerPresenceTransitions() {
+      const other = getOtherRole();
+      const pData = remotePartnerState[other];
+      if (!pData) return;
+
+      const isRecent = (Date.now() - (pData.lastSeen || 0)) < 16000;
+      const statusNow = !isRecent ? 'offline' : (pData.inChat ? 'in_chat' : 'in_store');
+
+      if (prevPartnerStatus && prevPartnerStatus !== statusNow && isVaultUnlocked) {
+        const pName = nicknames[other] || (other === 'partnerA' ? 'Partner 1' : 'Partner 2');
+        if (statusNow === 'in_chat') {
+          showPresenceBanner(`${pName} entered the chat`);
+        } else if (statusNow === 'in_store' && prevPartnerStatus === 'in_chat') {
+          showPresenceBanner(`${pName} left the chat`);
+        } else if (statusNow === 'in_store' && prevPartnerStatus === 'offline') {
+          showPresenceBanner(`${pName} connected to the website`);
+        }
+      }
+      prevPartnerStatus = statusNow;
+    }
+
+    function showPresenceBanner(text) {
+      const banner = document.getElementById('presenceAlertBanner');
+      const txt = document.getElementById('presenceAlertText');
+      if (!banner || !txt) return;
+      txt.textContent = text;
+      banner.classList.remove('hidden');
+      clearTimeout(window._presenceBannerTimer);
+      window._presenceBannerTimer = setTimeout(() => banner.classList.add('hidden'), 3600);
+    }
+
+    function showShortToast(text = '✓ نامەکە نێردرا') {
+      const toast = document.getElementById('shortToast');
+      const txt = document.getElementById('shortToastText');
+      if (!toast || !txt) return;
+      txt.textContent = text;
+      toast.classList.remove('hidden');
+      clearTimeout(window._shortToastTimer);
+      window._shortToastTimer = setTimeout(() => toast.classList.add('hidden'), 2400);
+    }
+
+    function updateChatHeaderUI() {
+      const other = getOtherRole();
+      const pName = nicknames[other] || (other === 'partnerA' ? 'Partner 1' : 'Partner 2');
+      const avatarEl = document.getElementById('partnerAvatar');
+      const nameEl = document.getElementById('partnerHeaderName');
+      const subEl = document.getElementById('partnerPresenceSubtext');
+      const dotEl = document.getElementById('partnerStatusDot');
+      const sendBtn = document.getElementById('sendTextBtn');
+
+      if (avatarEl) {
+        avatarEl.textContent = pName.charAt(0).toUpperCase();
+        avatarEl.className = `w-10 h-10 rounded-full flex items-center justify-center font-black text-base shadow-md border-2 ${
+          other === 'partnerA'
+            ? 'bg-gradient-to-tr from-[#FF2A54] to-[#FF6B8B] border-[#FF2A54]'
+            : 'bg-gradient-to-tr from-[#00B2FF] to-[#00E5FF] border-[#00B2FF]'
+        }`;
+      }
+      if (nameEl) nameEl.textContent = pName;
+
+      const pData = remotePartnerState[other] || {};
+      const isOnline = pData.lastSeen && (Date.now() - pData.lastSeen < 16000);
+      const isInChat = isOnline && pData.inChat;
+
+      if (dotEl) {
+        dotEl.className = `absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#12151A] ${
+          isInChat ? 'bg-emerald-400 animate-pulse' : (isOnline ? 'bg-amber-400' : 'bg-zinc-500')
+        }`;
+      }
+
+      if (subEl) {
+        if (isInChat) {
+          subEl.textContent = '● In Chat';
+          subEl.className = 'block text-[11px] font-bold text-emerald-400 truncate';
+        } else if (isOnline) {
+          subEl.textContent = '● In Store';
+          subEl.className = 'block text-[11px] font-bold text-amber-300 truncate';
+        } else {
+          subEl.textContent = 'Offline';
+          subEl.className = 'block text-[11px] font-semibold text-zinc-500 truncate';
+        }
+      }
+
+      if (sendBtn) {
+        const isHidden = sendBtn.classList.contains('hidden');
+        sendBtn.className = `${isHidden ? 'hidden' : 'flex'} w-10 h-10 rounded-full active:scale-95 text-white font-bold items-center justify-center transition flex-shrink-0 shadow-lg ${
+          myRole === 'partnerA' ? 'bg-[#FF2A54] hover:bg-[#e01e45]' : 'bg-[#00B2FF] hover:bg-[#0099db]'
+        }`;
+      }
+    }
+
+    function handleLiveTypingInput(val) {
+      const voiceBtn = document.getElementById('voiceRecordBtn');
+      const sendBtn = document.getElementById('sendTextBtn');
+      const hasText = Boolean(val && val.trim());
+      if (voiceBtn) voiceBtn.classList.toggle('hidden', hasText);
+      if (sendBtn) {
+        sendBtn.classList.toggle('hidden', !hasText);
+        sendBtn.classList.toggle('flex', hasText);
+      }
+      broadcastPresence(true, val);
+    }
+
+    function renderLiveTypingBubble() {
+      const other = getOtherRole();
+      const pData = remotePartnerState[other] || {};
+      const isFresh = pData.typingUpdatedAt && (Date.now() - pData.typingUpdatedAt < 12000);
+      const text = (pData.inChat && isFresh && pData.typingText) ? pData.typingText : '';
+
+      const container = document.getElementById('liveTypingContainer');
+      const box = document.getElementById('liveTypingBox');
+      const header = document.getElementById('liveTypingHeader');
+      const body = document.getElementById('liveTypingText');
+
+      if (!container || !box || !header || !body) return;
+      if (!text) {
+        container.classList.add('hidden');
+        return;
+      }
+
+      const pName = nicknames[other] || (other === 'partnerA' ? 'Partner 1' : 'Partner 2');
+      container.classList.remove('hidden');
+      box.className = `rounded-r-xl pl-3.5 pr-3 py-2.5 border-l-[3.5px] border-dashed ${
+        other === 'partnerA' ? 'border-[#FF2A54] bg-[#FF2A54]/10' : 'border-[#00B2FF] bg-[#00B2FF]/10'
+      }`;
+      header.className = `text-[11px] font-black uppercase tracking-wider ${
+        other === 'partnerA' ? 'text-[#FF2A54]' : 'text-[#00B2FF]'
+      }`;
+      header.textContent = `${pName} IS TYPING...`;
+      body.textContent = text;
+      scrollToChatBottom();
+    }
+
+    // =========================================================================
+    // 9. MESSAGING, SEEN RECEIPTS, REPLY, REACT, EDIT, DELETE & WIPE
+    // =========================================================================
+    function isPartnerActiveInChat() {
+      const other = getOtherRole();
+      const pData = remotePartnerState[other] || {};
+      return Boolean(pData.inChat && pData.lastSeen && (Date.now() - pData.lastSeen < 16000));
+    }
+
+    function markPartnerMessagesSeen() {
+      if (!isVaultUnlocked || document.visibilityState === 'hidden') return;
+      const unseenIds = [];
+      let maxSeenCreated = 0;
+
+      messages.forEach(m => {
+        if (m.senderRole !== myRole && !m.seen) {
+          m.seen = true;
+          m.seenAt = Date.now();
+          unseenIds.push(m.id);
+          if ((m.createdAt || 0) > maxSeenCreated) maxSeenCreated = m.createdAt || 0;
+        }
+      });
+
+      if (unseenIds.length > 0) {
+        persistMessagesLocally();
+        renderChatMessages();
+
+        const seenEvt = {
+          type: 'MESSAGES_SEEN',
+          viewerRole: myRole,
+          msgIds: unseenIds,
+          lastSeenCreatedAt: maxSeenCreated,
+          timestamp: Date.now()
+        };
+        publishLivePacket(seenEvt);
+        publishRetainedReceipt();
+        publishToNtfyBackup(seenEvt);
+
+        if (firebaseRtdbUrl) {
+          unseenIds.forEach(id => {
+            const m = messages.find(x => x.id === id);
+            if (m) pushMessageToFirebaseRtdb(m);
+          });
+        }
+      }
+    }
+
+    function handleSendChatSubmit(e) {
+      if (e) e.preventDefault();
+      const inputEl = document.getElementById('chatMessageInput');
+      if (!inputEl) return;
+      const text = inputEl.value.trim();
+      if (!text) return;
+
+      // EDIT EXISTING MESSAGE
+      if (editingMsg) {
+        const idx = messages.findIndex(m => m.id === editingMsg.id);
+        if (idx > -1) {
+          const now = Date.now();
+          messages[idx].text = text;
+          messages[idx].isEdited = true;
+          messages[idx].updatedAt = now;
+          myEditsMap[messages[idx].id] = { text, isEdited: true, updatedAt: now };
+
+          persistMetaLocally();
+          persistMessagesLocally();
+          renderChatMessages();
+
+          const editEvt = { type: 'EDIT_MESSAGE', msgId: messages[idx].id, text, updatedAt: now };
+          publishLivePacket(editEvt);
+          publishRetainedMailbox();
+          publishToNtfyBackup(editEvt);
+          pushMessageToFirebaseRtdb(messages[idx]);
+        }
+        clearComposerContext();
+        inputEl.value = '';
+        handleLiveTypingInput('');
+        return;
+      }
+
+      // SEND NEW TEXT MESSAGE (WORKS EVEN WHEN PARTNER IS 100% OFFLINE)
+      const now = Date.now();
+      const partnerInChatNow = isPartnerActiveInChat();
+      const newMsg = {
+        id: 'msg_' + now + '_' + Math.random().toString(36).substring(2, 7),
+        senderRole: myRole,
+        senderName: nicknames[myRole] || (myRole === 'partnerA' ? 'Partner 1' : 'Partner 2'),
+        type: 'text',
+        text,
+        replyTo: replyingToMsg ? {
+          id: replyingToMsg.id,
+          senderName: replyingToMsg.senderName,
+          senderRole: replyingToMsg.senderRole,
+          text: replyingToMsg.text || `[${replyingToMsg.type}]`
+        } : null,
+        reactions: {},
+        isEdited: false,
+        seen: partnerInChatNow,
+        seenAt: partnerInChatNow ? now : null,
+        createdAt: now,
+        updatedAt: now
+      };
+
+      inputEl.value = '';
+      clearComposerContext();
+      handleLiveTypingInput('');
+
+      messages.push(newMsg);
+      persistMessagesLocally();
+      renderChatMessages();
+      scrollToChatBottom();
+
+      // Deliver via all cloud offline layers simultaneously
+      publishLivePacket({ type: 'NEW_MESSAGE', message: newMsg });
+      publishRetainedMailbox();
+      publishToNtfyBackup({ type: 'NEW_MESSAGE', message: newMsg });
+      pushMessageToFirebaseRtdb(newMsg);
+    }
+
+    async function sendMediaChatMessage(type, mediaUrl, captionText = '', durationSec = 0) {
+      if (!mediaUrl) return;
+      const now = Date.now();
+      const partnerInChatNow = isPartnerActiveInChat();
+      const newMsg = {
+        id: 'msg_' + now + '_' + Math.random().toString(36).substring(2, 7),
+        senderRole: myRole,
+        senderName: nicknames[myRole] || (myRole === 'partnerA' ? 'Partner 1' : 'Partner 2'),
+        type,
+        mediaUrl,
+        text: captionText,
+        duration: durationSec,
+        replyTo: replyingToMsg ? {
+          id: replyingToMsg.id,
+          senderName: replyingToMsg.senderName,
+          senderRole: replyingToMsg.senderRole,
+          text: replyingToMsg.text || `[${replyingToMsg.type}]`
+        } : null,
+        reactions: {},
+        isEdited: false,
+        seen: partnerInChatNow,
+        seenAt: partnerInChatNow ? now : null,
+        createdAt: now,
+        updatedAt: now
+      };
+
+      clearComposerContext();
+      messages.push(newMsg);
+      persistMessagesLocally();
+      renderChatMessages();
+      scrollToChatBottom();
+
+      // Send live (chunked if large) + save to retained offline mailbox + Firebase if configured
+      await publishChunkedMediaMessage(newMsg);
+      publishRetainedMailbox();
+      pushMessageToFirebaseRtdb(newMsg);
+
+      // Publish metadata placeholder to ntfy backup
+      publishToNtfyBackup({
+        type: 'NEW_MESSAGE',
+        message: { ...newMsg, mediaUrl: '', hasLargeMedia: true }
+      });
+    }
+
+    // Tap or Long-Press handlers for Message Actions
+    function handleMsgTouchStart(msgId) {
+      clearTimeout(longPressTimer);
+      longPressTimer = setTimeout(() => {
+        activeMessageMenuId = msgId;
+        renderChatMessages();
+      }, 420);
+    }
+
+    function handleMsgTouchEnd() {
+      clearTimeout(longPressTimer);
+    }
+
+    function toggleMessageMenu(e, msgId) {
+      if (e) e.stopPropagation();
+      activeMessageMenuId = activeMessageMenuId === msgId ? null : msgId;
+      renderChatMessages();
+    }
+
+    function closeActiveMessageMenu() {
+      if (activeMessageMenuId !== null) {
+        activeMessageMenuId = null;
+        renderChatMessages();
+      }
+    }
+
+    function reactToMessage(e, msgId, emoji) {
+      if (e) e.stopPropagation();
+      const idx = messages.findIndex(m => m.id === msgId);
+      if (idx === -1) return;
+      const reactions = { ...(messages[idx].reactions || {}) };
+      const finalEmoji = reactions[myRole] === emoji ? null : emoji;
+      if (finalEmoji === null) delete reactions[myRole];
+      else reactions[myRole] = finalEmoji;
+
+      messages[idx].reactions = reactions;
+      myReactionsMap[msgId] = finalEmoji;
+      activeMessageMenuId = null;
+
+      persistMetaLocally();
+      persistMessagesLocally();
+      renderChatMessages();
+
+      const evt = { type: 'REACT_MESSAGE', msgId, reactorRole: myRole, emoji: finalEmoji };
+      publishLivePacket(evt);
+      publishRetainedMailbox();
+      publishToNtfyBackup(evt);
+      pushMessageToFirebaseRtdb(messages[idx]);
+    }
+
+    function startReplyToMessage(e, msgId) {
+      if (e) e.stopPropagation();
+      const msg = messages.find(m => m.id === msgId);
+      if (!msg) return;
+      replyingToMsg = msg;
+      editingMsg = null;
+      activeMessageMenuId = null;
+      updateComposerContextUI();
+      renderChatMessages();
+      document.getElementById('chatMessageInput')?.focus();
+    }
+
+    function startEditMessage(e, msgId) {
+      if (e) e.stopPropagation();
+      const msg = messages.find(m => m.id === msgId);
+      if (!msg || msg.type !== 'text') return;
+      editingMsg = msg;
+      replyingToMsg = null;
+      activeMessageMenuId = null;
+      updateComposerContextUI();
+      renderChatMessages();
+      const inputEl = document.getElementById('chatMessageInput');
+      if (inputEl) {
+        inputEl.value = msg.text;
+        handleLiveTypingInput(msg.text);
+        inputEl.focus();
+      }
+    }
+
+    function deleteSingleMessage(e, msgId) {
+      if (e) e.stopPropagation();
+      deletedMsgIds.add(msgId);
+      messages = messages.filter(m => m.id !== msgId);
+      activeMessageMenuId = null;
+
+      persistMetaLocally();
+      persistMessagesLocally();
+      renderChatMessages();
+
+      const evt = { type: 'DELETE_MESSAGE', msgId };
+      publishLivePacket(evt);
+      publishRetainedMailbox();
+      publishToNtfyBackup(evt);
+      deleteMessageInFirebaseRtdb(msgId);
+    }
+
+    function updateComposerContextUI() {
+      const bar = document.getElementById('composerContextBar');
+      const icon = document.getElementById('contextBarIcon');
+      const label = document.getElementById('contextBarLabel');
+      const text = document.getElementById('contextBarText');
+      if (!bar) return;
+
+      if (replyingToMsg) {
+        bar.classList.remove('hidden');
+        icon.className = 'fa-solid fa-reply text-[#00B2FF]';
+        label.className = 'font-bold text-[#00B2FF]';
+        label.textContent = `Replying to ${replyingToMsg.senderName}:`;
+        text.textContent = replyingToMsg.text || `[${replyingToMsg.type}]`;
+      } else if (editingMsg) {
+        bar.classList.remove('hidden');
+        icon.className = 'fa-solid fa-pen text-amber-400';
+        label.className = 'font-bold text-amber-400';
+        label.textContent = 'Editing message:';
+        text.textContent = editingMsg.text;
+      } else {
+        bar.classList.add('hidden');
+      }
+    }
+
+    function clearComposerContext() {
+      const wasEditing = Boolean(editingMsg);
+      replyingToMsg = null;
+      editingMsg = null;
+      updateComposerContextUI();
+      if (wasEditing) {
+        const inputEl = document.getElementById('chatMessageInput');
+        if (inputEl) {
+          inputEl.value = '';
+          handleLiveTypingInput('');
+        }
+      }
+    }
+
+    function toggleConfirmClearModal(show) {
+      document.getElementById('confirmClearModal')?.classList.toggle('hidden', !show);
+    }
+
+    function executeWipeAllMessages() {
+      const wipeTs = Date.now();
+      globalWipeTimestamp = wipeTs;
+      messages = [];
+      myEditsMap = {};
+      myReactionsMap = {};
+      deletedMsgIds.clear();
+
+      persistMetaLocally();
+      persistMessagesLocally();
+      renderChatMessages();
+      toggleConfirmClearModal(false);
+
+      const wipeEvt = { type: 'WIPE_ALL', wipeTimestamp: wipeTs };
+      publishLivePacket(wipeEvt);
+      publishToNtfyBackup(wipeEvt);
+      wipeFirebaseRtdb(wipeTs);
+
+      if (mqttClient && mqttConnected) {
+        try {
+          mqttClient.publish(TOPIC_WIPE, JSON.stringify({ wipeTimestamp: wipeTs }), { qos: 1, retain: true });
+          // Clear both retained mailboxes so wiped messages never return
+          const emptyA = JSON.stringify({ senderRole: 'partnerA', updatedAt: wipeTs, wipeTimestamp: wipeTs, messages: [], deletedIds: [], edits: {}, reactions: {} });
+          const emptyB = JSON.stringify({ senderRole: 'partnerB', updatedAt: wipeTs, wipeTimestamp: wipeTs, messages: [], deletedIds: [], edits: {}, reactions: {} });
+          mqttClient.publish(TOPIC_MAILBOX_PREFIX + 'partnerA', emptyA, { qos: 1, retain: true });
+          mqttClient.publish(TOPIC_MAILBOX_PREFIX + 'partnerB', emptyB, { qos: 1, retain: true });
+        } catch (e) {}
+      }
+
+      showShortToast('✓ All chats wiped');
+    }
+
+    function renderChatMessages() {
+      const listEl = document.getElementById('messagesList');
+      if (!listEl) return;
+
+      if (messages.length === 0) {
+        listEl.innerHTML = `
+          <div class="h-60 flex flex-col items-center justify-center text-center text-zinc-500">
+            <div class="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center mb-3 border border-white/10">
+              <i class="fa-regular fa-comments text-xl text-[#FFFC00]"></i>
+            </div>
+            <p class="text-sm font-bold text-zinc-300">No messages yet</p>
+            <p class="text-xs text-zinc-500 max-w-xs mt-1">
+              Messages sent offline are saved automatically and delivered as soon as your partner opens the site.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = messages.map(msg => {
+        const isRoleA = msg.senderRole === 'partnerA';
+        const isMe = msg.senderRole === myRole;
+        const barColor = isRoleA ? 'border-[#FF2A54]' : 'border-[#00B2FF]';
+        const nameColor = isRoleA ? 'text-[#FF2A54]' : 'text-[#00B2FF]';
+        const bgHighlight = isRoleA ? 'bg-[#FF2A54]/[0.07]' : 'bg-[#00B2FF]/[0.07]';
+        const timeStr = msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+        // Sent & Seen Receipt Indicators (exact Kurdish labels requested)
+        let receiptHtml = '';
+        if (isMe) {
+          if (msg.seen) {
+            receiptHtml = `<span class="text-[10px] font-extrabold text-[#00B2FF]">✓✓ بینرا</span>`;
+          } else {
+            receiptHtml = `<span class="text-[10px] font-semibold text-zinc-400">✓ نێردرا</span>`;
+          }
+        }
+
+        let replyHtml = '';
+        if (msg.replyTo) {
+          const rBorder = msg.replyTo.senderRole === 'partnerA' ? 'border-[#FF2A54]' : 'border-[#00B2FF]';
+          replyHtml = `
+            <div class="mb-2 pl-2.5 py-1 rounded bg-black/40 border-l-2 ${rBorder} text-xs text-zinc-300">
+              <div class="text-[10px] font-bold uppercase opacity-75">${escapeHtml(msg.replyTo.senderName || '')}</div>
+              <div class="truncate text-zinc-400">${escapeHtml(msg.replyTo.text || '')}</div>
+            </div>
+          `;
+        }
+
+        let bodyHtml = '';
+        if (msg.type === 'text') {
+          bodyHtml = `<p class="text-sm sm:text-[15px] text-zinc-100 whitespace-pre-wrap break-words leading-snug font-medium">${escapeHtml(msg.text || '')}</p>`;
+        } else if (msg.type === 'image') {
+          bodyHtml = msg.mediaUrl ? `
+            <div class="mt-1.5">
+              <div class="relative inline-block rounded-xl overflow-hidden border border-white/15 max-w-xs sm:max-w-sm bg-black">
+                <img src="${msg.mediaUrl}" alt="Photo" class="max-h-80 w-auto object-contain block" />
+                ${msg.text ? `<div class="bg-black/75 text-white text-xs font-bold text-center py-1.5 px-3">${escapeHtml(msg.text)}</div>` : ''}
+              </div>
+            </div>
+          ` : `<p class="text-xs italic text-zinc-400 mt-1"><i class="fa-regular fa-image mr-1"></i> Photo syncing when partner connects...</p>`;
+        } else if (msg.type === 'video') {
+          bodyHtml = msg.mediaUrl ? `
+            <div class="mt-1.5" onclick="event.stopPropagation()">
+              <div class="relative inline-block rounded-xl overflow-hidden border border-white/15 max-w-xs sm:max-w-sm bg-black">
+                <video src="${msg.mediaUrl}" controls playsinline preload="metadata" class="max-h-80 w-auto block"></video>
+                ${msg.text ? `<div class="bg-black/75 text-white text-xs font-bold text-center py-1.5 px-3">${escapeHtml(msg.text)}</div>` : ''}
+              </div>
+            </div>
+          ` : `<p class="text-xs italic text-zinc-400 mt-1"><i class="fa-solid fa-film mr-1"></i> Video syncing when partner is online...</p>`;
+        } else if (msg.type === 'audio') {
+          bodyHtml = msg.mediaUrl ? `
+            <div class="mt-1.5 flex items-center gap-3 bg-black/40 border border-white/10 rounded-xl p-2 max-w-xs" onclick="event.stopPropagation()">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isRoleA ? 'bg-[#FF2A54]' : 'bg-[#00B2FF]'}">
+                <i class="fa-solid fa-volume-high text-xs text-white"></i>
+              </div>
+              <audio src="${msg.mediaUrl}" controls class="h-8 w-full"></audio>
+            </div>
+          ` : `<p class="text-xs italic text-zinc-400 mt-1"><i class="fa-solid fa-microphone mr-1"></i> Voice note syncing...</p>`;
+        }
+
+        const reactionsObj = msg.reactions || {};
+        const rKeys = Object.keys(reactionsObj);
+        const reactionsHtml = rKeys.length > 0 ? `
+          <div class="flex items-center gap-1 mt-2">
+            ${rKeys.map(rKey => `
+              <span class="inline-flex items-center gap-1 text-xs bg-white/10 border border-white/15 px-2 py-0.5 rounded-full">
+                <span>${reactionsObj[rKey]}</span>
+                <span class="text-[10px] text-zinc-400 font-bold">${escapeHtml(nicknames[rKey] || (rKey === 'partnerA' ? 'P1' : 'P2'))}</span>
+              </span>
+            `).join('')}
+          </div>
+        ` : '';
+
+        const menuHtml = activeMessageMenuId === msg.id ? `
+          <div onclick="event.stopPropagation()" class="mt-1.5 bg-[#1B1F27] border border-white/15 rounded-2xl p-2 shadow-2xl flex flex-wrap items-center justify-between gap-2 z-10">
+            <div class="flex items-center gap-1">
+              ${REACTION_EMOJIS.map(emoji => `
+                <button
+                  type="button"
+                  onclick="reactToMessage(event, '${msg.id}', '${emoji}')"
+                  class="w-8 h-8 rounded-full flex items-center justify-center text-base hover:bg-white/15 transition ${reactionsObj[myRole] === emoji ? 'bg-white/20 ring-1 ring-[#FFFC00]' : ''}"
+                >
+                  ${emoji}
+                </button>
+              `).join('')}
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button type="button" onclick="startReplyToMessage(event, '${msg.id}')" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center gap-1">
+                <i class="fa-solid fa-reply text-[10px]"></i>
+                <span>Reply</span>
+              </button>
+              ${msg.type === 'text' ? `
+                <button type="button" onclick="startEditMessage(event, '${msg.id}')" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-bold flex items-center gap-1 text-amber-300">
+                  <i class="fa-solid fa-pen text-[10px]"></i>
+                  <span>Edit</span>
+                </button>
+              ` : ''}
+              <button type="button" onclick="deleteSingleMessage(event, '${msg.id}')" class="px-2.5 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-xs font-bold flex items-center gap-1 text-red-400">
+                <i class="fa-solid fa-trash-can text-[10px]"></i>
+                <span>Delete</span>
+              </button>
+            </div>
+          </div>
+        ` : '';
+
+        return `
+          <div
+            class="max-w-2xl mx-auto group relative transition"
+            onclick="toggleMessageMenu(event, '${msg.id}')"
+            ontouchstart="handleMsgTouchStart('${msg.id}')"
+            ontouchend="handleMsgTouchEnd()"
+            ontouchmove="handleMsgTouchEnd()"
+          >
+            <div class="rounded-r-xl pl-3.5 pr-3 py-2 border-l-[3.5px] ${barColor} ${bgHighlight} hover:bg-white/[0.09] transition cursor-pointer">
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-[11px] font-black uppercase tracking-wider ${nameColor}">
+                    ${isMe ? 'ME' : escapeHtml(nicknames[msg.senderRole] || msg.senderName || 'Partner')}
+                  </span>
+                  ${msg.isEdited ? `<span class="text-[10px] italic text-zinc-400">(edited)</span>` : ''}
+                </div>
+                <div class="flex items-center gap-2">
+                  ${receiptHtml}
+                  <span class="text-[10px] text-zinc-500 font-medium">${timeStr}</span>
+                </div>
+              </div>
+              ${replyHtml}
+              ${bodyHtml}
+              ${reactionsHtml}
+            </div>
+            ${menuHtml}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function scrollToChatBottom() {
+      document.getElementById('chatBottomAnchor')?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // =========================================================================
+    // 10. TELEGRAM DISGUISED PING (SHORT CLEAN TOAST: "✓ نامەکە نێردرا")
+    // =========================================================================
+    async function sendTelegramStealthPing() {
+      const disguisedText = telegramConfig.customText || 'VELOURA: Your shopping bag is ready for checkout.';
+
+      // Always show ONLY the short clean toast requested
+      showShortToast('✓ نامەکە نێردرا');
+
+      publishLivePacket({
+        type: 'STEALTH_PING',
+        senderRole: myRole,
+        text: disguisedText,
+        timestamp: Date.now()
+      });
+
+      if (telegramConfig.botToken && telegramConfig.chatId) {
+        try {
+          await fetch(`https://api.telegram.org/bot${telegramConfig.botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: telegramConfig.chatId,
+              text: disguisedText
+            })
+          });
+        } catch (err) {}
+      }
+    }
+
+    // =========================================================================
+    // 11. BUILT-IN CAMERA (PHOTO & VIDEO) + GALLERY UPLOAD
+    // =========================================================================
+    function getSupportedVideoMime() {
+      const list = ['video/webm;codecs=vp8,opus', 'video/webm;codecs=vp9,opus', 'video/webm', 'video/mp4'];
+      if (typeof MediaRecorder === 'undefined') return '';
+      for (const m of list) {
+        if (MediaRecorder.isTypeSupported(m)) return m;
+      }
+      return '';
+    }
+
+    async function openSnapCameraModal(mode = 'photo') {
+      suppressHideLockUntil = Date.now() + 8000;
+      cameraMode = mode;
+      capturedMediaObj = null;
+      document.getElementById('snapCameraModal')?.classList.remove('hidden');
+      document.getElementById('capturedPreviewContainer')?.classList.add('hidden');
+      document.getElementById('shutterControls')?.classList.remove('hidden');
+      document.getElementById('sendSnapControls')?.classList.add('hidden');
+      document.getElementById('snapCaptionInput').value = '';
+      updateCameraModeButtons();
+      await startCameraStream();
+      suppressHideLockUntil = 0;
+    }
+
+    function updateCameraModeButtons() {
+      const pBtn = document.getElementById('camModePhotoBtn');
+      const vBtn = document.getElementById('camModeVideoBtn');
+      const pShutter = document.getElementById('photoShutterBtn');
+      const vStart = document.getElementById('videoStartBtn');
+      const vStop = document.getElementById('videoStopBtn');
+
+      if (cameraMode === 'photo') {
+        pBtn.className = 'px-3.5 py-1 rounded-full text-xs font-bold transition bg-[#FFFC00] text-black';
+        vBtn.className = 'px-3.5 py-1 rounded-full text-xs font-bold transition text-white';
+        pShutter?.classList.remove('hidden');
+        vStart?.classList.add('hidden');
+        vStop?.classList.add('hidden');
+      } else {
+        pBtn.className = 'px-3.5 py-1 rounded-full text-xs font-bold transition text-white';
+        vBtn.className = 'px-3.5 py-1 rounded-full text-xs font-bold transition bg-[#FF2A54] text-white';
+        pShutter?.classList.add('hidden');
+        vStart?.classList.remove('hidden');
+        vStart?.classList.add('flex');
+        vStop?.classList.add('hidden');
+      }
+    }
+
+    async function switchCameraMode(mode) {
+      cameraMode = mode;
+      capturedMediaObj = null;
+      document.getElementById('capturedPreviewContainer')?.classList.add('hidden');
+      document.getElementById('shutterControls')?.classList.remove('hidden');
+      document.getElementById('sendSnapControls')?.classList.add('hidden');
+      updateCameraModeButtons();
+      await startCameraStream();
+    }
+
+    async function startCameraStream() {
+      stopCameraStream();
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: cameraFacingMode, width: { ideal: 480 }, height: { ideal: 640 } },
+          audio: cameraMode === 'video'
+        });
+        const vEl = document.getElementById('cameraLiveVideo');
+        if (vEl) vEl.srcObject = cameraStream;
+      } catch (e) {
+        try {
+          cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: cameraFacingMode } });
+          const vEl = document.getElementById('cameraLiveVideo');
+          if (vEl) vEl.srcObject = cameraStream;
+        } catch (err) {}
+      }
+    }
+
+    function stopCameraStream() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+      }
+      clearInterval(videoRecordTimer);
+      document.getElementById('videoRecBadge')?.classList.add('hidden');
+    }
+
+    function closeSnapCameraModal() {
+      stopCameraStream();
+      document.getElementById('snapCameraModal')?.classList.add('hidden');
+    }
+
+    async function flipSnapCamera() {
+      cameraFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
+      await startCameraStream();
+    }
+
+    function capturePhotoSnap() {
+      const videoEl = document.getElementById('cameraLiveVideo');
+      if (!videoEl) return;
+      const canvas = document.createElement('canvas');
+      const targetW = 540;
+      const scale = targetW / (videoEl.videoWidth || 480);
+      canvas.width = targetW;
+      canvas.height = (videoEl.videoHeight || 640) * scale;
+      canvas.getContext('2d').drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.66);
+      showCapturedMediaPreview('image', dataUrl);
+      stopCameraStream();
+    }
+
+    function startVideoSnapRecording() {
+      if (!cameraStream) return;
+      videoChunks = [];
+      videoRecordSeconds = 0;
+      try {
+        const mime = getSupportedVideoMime();
+        recordedVideoMimeType = mime || 'video/webm';
+        const opts = mime ? { mimeType: mime, videoBitsPerSecond: 210000 } : { videoBitsPerSecond: 210000 };
+        videoRecorder = new MediaRecorder(cameraStream, opts);
+        videoRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) videoChunks.push(e.data);
+        };
+        videoRecorder.onstop = () => {
+          const blob = new Blob(videoChunks, { type: recordedVideoMimeType });
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            showCapturedMediaPreview('video', reader.result);
+            stopCameraStream();
+          };
+          reader.readAsDataURL(blob);
+        };
+        videoRecorder.start(250);
+
+        document.getElementById('videoStartBtn')?.classList.add('hidden');
+        const stopBtn = document.getElementById('videoStopBtn');
+        stopBtn?.classList.remove('hidden');
+        stopBtn?.classList.add('flex');
+        document.getElementById('videoRecBadge')?.classList.remove('hidden');
+        document.getElementById('videoRecTimer').textContent = 'REC 0:00 / 0:10';
+
+        videoRecordTimer = setInterval(() => {
+          videoRecordSeconds++;
+          const s = videoRecordSeconds < 10 ? `0${videoRecordSeconds}` : `${videoRecordSeconds}`;
+          document.getElementById('videoRecTimer').textContent = `REC 0:${s} / 0:10`;
+          if (videoRecordSeconds >= 10) stopVideoSnapRecording();
+        }, 1000);
+      } catch (e) {}
+    }
+
+    function stopVideoSnapRecording() {
+      clearInterval(videoRecordTimer);
+      if (videoRecorder && videoRecorder.state !== 'inactive') {
+        videoRecorder.stop();
+      }
+    }
+
+    function showCapturedMediaPreview(type, dataUrl) {
+      capturedMediaObj = { type, dataUrl };
+      const container = document.getElementById('capturedPreviewContainer');
+      const imgEl = document.getElementById('capturedImageEl');
+      const vidEl = document.getElementById('capturedVideoEl');
+
+      container?.classList.remove('hidden');
+      document.getElementById('shutterControls')?.classList.add('hidden');
+      document.getElementById('sendSnapControls')?.classList.remove('hidden');
+
+      if (type === 'image') {
+        imgEl.src = dataUrl;
+        imgEl.classList.remove('hidden');
+        vidEl.pause();
+        vidEl.classList.add('hidden');
+      } else {
+        vidEl.src = dataUrl;
+        vidEl.classList.remove('hidden');
+        imgEl.classList.add('hidden');
+      }
+    }
+
+    async function retakeSnap() {
+      capturedMediaObj = null;
+      document.getElementById('capturedPreviewContainer')?.classList.add('hidden');
+      document.getElementById('shutterControls')?.classList.remove('hidden');
+      document.getElementById('sendSnapControls')?.classList.add('hidden');
+      updateCameraModeButtons();
+      await startCameraStream();
+    }
+
+    async function confirmSendSnap() {
+      if (!capturedMediaObj) return;
+      const caption = (document.getElementById('snapCaptionInput')?.value || '').trim();
+      const toSend = { ...capturedMediaObj };
+      capturedMediaObj = null;
+      closeSnapCameraModal();
+      await sendMediaChatMessage(toSend.type, toSend.dataUrl, caption);
+    }
+
+    function triggerGalleryUpload() {
+      suppressHideLockUntil = Date.now() + 20000;
+      document.getElementById('galleryFileInput')?.click();
+    }
+
+    function handleGalleryFileSelect(e) {
+      suppressHideLockUntil = 0;
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxDim = 600;
+            let w = img.width, h = img.height;
+            if (w > h && w > maxDim) { h = (h * maxDim) / w; w = maxDim; }
+            else if (h > maxDim) { w = (w * maxDim) / h; h = maxDim; }
+            canvas.width = w;
+            canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            const compressed = canvas.toDataURL('image/jpeg', 0.65);
+            document.getElementById('snapCameraModal')?.classList.remove('hidden');
+            showCapturedMediaPreview('image', compressed);
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else if (file.type.startsWith('video/')) {
+        if (file.size > 4.5 * 1024 * 1024) {
+          showShortToast('Video max size is 4.5MB');
+          e.target.value = '';
+          return;
+        }
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          document.getElementById('snapCameraModal')?.classList.remove('hidden');
+          showCapturedMediaPreview('video', reader.result);
+        };
+        reader.readAsDataURL(file);
+      }
+      e.target.value = '';
+    }
+
+    // =========================================================================
+    // 12. VOICE NOTE RECORDER
+    // =========================================================================
+    async function startVoiceNote() {
+      suppressHideLockUntil = Date.now() + 8000;
+      try {
+        voiceStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        suppressHideLockUntil = 0;
+        voiceChunks = [];
+        voiceSeconds = 0;
+        voiceRecorder = new MediaRecorder(voiceStream);
+        voiceRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) voiceChunks.push(e.data);
+        };
+        voiceRecorder.start(200);
+        isRecordingVoice = true;
+
+        document.getElementById('chatComposerForm')?.classList.add('hidden');
+        document.getElementById('voiceRecordingBar')?.classList.remove('hidden');
+        document.getElementById('voiceTimerLabel').textContent = '0:00';
+
+        voiceTimerInterval = setInterval(() => {
+          voiceSeconds++;
+          const m = Math.floor(voiceSeconds / 60);
+          const s = voiceSeconds % 60;
+          document.getElementById('voiceTimerLabel').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+          if (voiceSeconds >= 25) stopVoiceNote(true);
+        }, 1000);
+      } catch (e) {
+        suppressHideLockUntil = 0;
+      }
+    }
+
+    function stopVoiceNote(shouldSend = true) {
+      clearInterval(voiceTimerInterval);
+      isRecordingVoice = false;
+      document.getElementById('voiceRecordingBar')?.classList.add('hidden');
+      document.getElementById('chatComposerForm')?.classList.remove('hidden');
+
+      if (!voiceRecorder) return;
+      const dur = voiceSeconds || 1;
+      const rec = voiceRecorder;
+      voiceRecorder = null;
+
+      rec.onstop = () => {
+        if (voiceStream) {
+          voiceStream.getTracks().forEach(t => t.stop());
+          voiceStream = null;
+        }
+        if (shouldSend && voiceChunks.length > 0) {
+          const blob = new Blob(voiceChunks, { type: 'audio/webm' });
+          const reader = new FileReader();
+          reader.onloadend = () => sendMediaChatMessage('audio', reader.result, '', dur);
+          reader.readAsDataURL(blob);
+        }
+      };
+
+      if (rec.state !== 'inactive') rec.stop();
+    }
+
+    // =========================================================================
+    // 13. WEBRTC P2P VOICE & VIDEO CALLING (SIGNALED OVER MQTT)
+    // =========================================================================
+    async function initiateCall(mode = 'video') {
+      suppressHideLockUntil = Date.now() + 8000;
+      currentCallType = mode;
+      currentCallState = 'calling';
+      activeCallFacingMode = 'user';
+      activeCallId = 'call_' + Date.now();
+      isAudioMuted = false;
+      isVideoTrackEnabled = mode === 'video';
+
+      showActiveCallUI();
+
+      try {
+        localCallStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: mode === 'video' ? { facingMode: activeCallFacingMode } : false
+        });
+        suppressHideLockUntil = 0;
+
+        const localVid = document.getElementById('localCallVideo');
+        if (localVid) localVid.srcObject = localCallStream;
+
+        peerConnection = new RTCPeerConnection(RTC_CONFIG);
+        localCallStream.getTracks().forEach(t => peerConnection.addTrack(t, localCallStream));
+
+        remoteCallStream = new MediaStream();
+        peerConnection.ontrack = (event) => {
+          event.streams[0].getTracks().forEach(t => remoteCallStream.addTrack(t));
+          const remVid = document.getElementById('remoteCallVideo');
+          if (remVid) remVid.srcObject = remoteCallStream;
+        };
+
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate) {
+            publishLivePacket({
+              type: 'WEBRTC_SIGNAL',
+              signalType: 'ICE_CANDIDATE',
+              callId: activeCallId,
+              senderRole: myRole,
+              candidate: event.candidate.toJSON()
+            });
+          }
+        };
+
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+
+        publishLivePacket({
+          type: 'WEBRTC_SIGNAL',
+          signalType: 'CALL_OFFER',
+          callId: activeCallId,
+          callerRole: myRole,
+          callerName: nicknames[myRole],
+          callType: mode,
+          offer: { type: offer.type, sdp: offer.sdp }
+        });
+      } catch (e) {
+        suppressHideLockUntil = 0;
+        cleanupCallMedia();
+      }
+    }
+
+    async function handleIncomingWebRTCSignal(packet) {
+      if (packet.senderRole === myRole || packet.callerRole === myRole) return;
+
+      if (packet.signalType === 'CALL_OFFER') {
+        if (!isVaultUnlocked || currentCallState) return;
+        incomingCallOfferData = packet;
+        document.getElementById('incomingCallerName').textContent = packet.callerName || 'Partner';
+        document.getElementById('incomingCallerAvatar').textContent = (packet.callerName || 'P').charAt(0).toUpperCase();
+        document.getElementById('incomingCallTypeLabel').textContent = `Incoming ${packet.callType === 'video' ? 'Video' : 'Voice'} Call...`;
+        document.getElementById('incomingAcceptIcon').className = `fa-solid ${packet.callType === 'video' ? 'fa-video' : 'fa-phone'} text-xl`;
+        document.getElementById('incomingCallOverlay')?.classList.remove('hidden');
+      } else if (packet.signalType === 'CALL_ANSWER') {
+        if (peerConnection && currentCallState === 'calling') {
+          await peerConnection.setRemoteDescription(new RTCSessionDescription(packet.answer));
+          currentCallState = 'connected';
+          startCallDurationTimer();
+          updateActiveCallVisibility();
+        }
+      } else if (packet.signalType === 'ICE_CANDIDATE') {
+        if (peerConnection && packet.candidate) {
+          try { await peerConnection.addIceCandidate(new RTCIceCandidate(packet.candidate)); } catch (e) {}
+        }
+      } else if (packet.signalType === 'CALL_END') {
+        document.getElementById('incomingCallOverlay')?.classList.add('hidden');
+        cleanupCallMedia();
+      }
+    }
+
+    async function acceptIncomingCall() {
+      if (!incomingCallOfferData) return;
+      suppressHideLockUntil = Date.now() + 8000;
+      document.getElementById('incomingCallOverlay')?.classList.add('hidden');
+
+      const offerPacket = incomingCallOfferData;
+      incomingCallOfferData = null;
+      activeCallId = offerPacket.callId;
+      currentCallType = offerPacket.callType || 'video';
+      currentCallState = 'connected';
+      activeCallFacingMode = 'user';
+      isAudioMuted = false;
+      isVideoTrackEnabled = currentCallType === 'video';
+
+      showActiveCallUI();
+      startCallDurationTimer();
+
+      try {
+        localCallStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: currentCallType === 'video' ? { facingMode: activeCallFacingMode } : false
+        });
+        suppressHideLockUntil = 0;
+
+        document.getElementById('localCallVideo').srcObject = localCallStream;
+
+        peerConnection = new RTCPeerConnection(RTC_CONFIG);
+        localCallStream.getTracks().forEach(t => peerConnection.addTrack(t, localCallStream));
+
+        remoteCallStream = new MediaStream();
+        peerConnection.ontrack = (event) => {
+          event.streams[0].getTracks().forEach(t => remoteCallStream.addTrack(t));
+          document.getElementById('remoteCallVideo').srcObject = remoteCallStream;
+        };
+
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate) {
+            publishLivePacket({
+              type: 'WEBRTC_SIGNAL',
+              signalType: 'ICE_CANDIDATE',
+              callId: activeCallId,
+              senderRole: myRole,
+              candidate: event.candidate.toJSON()
+            });
+          }
+        };
+
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(offerPacket.offer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+
+        publishLivePacket({
+          type: 'WEBRTC_SIGNAL',
+          signalType: 'CALL_ANSWER',
+          callId: activeCallId,
+          senderRole: myRole,
+          answer: { type: answer.type, sdp: answer.sdp }
+        });
+      } catch (e) {
+        suppressHideLockUntil = 0;
+        cleanupCallMedia();
+      }
+    }
+
+    function declineIncomingCall() {
+      document.getElementById('incomingCallOverlay')?.classList.add('hidden');
+      if (incomingCallOfferData) {
+        publishLivePacket({
+          type: 'WEBRTC_SIGNAL',
+          signalType: 'CALL_END',
+          callId: incomingCallOfferData.callId,
+          senderRole: myRole
+        });
+        incomingCallOfferData = null;
+      }
+    }
+
+    function endActiveCall(shouldBroadcast = true) {
+      if (shouldBroadcast && activeCallId) {
+        publishLivePacket({
+          type: 'WEBRTC_SIGNAL',
+          signalType: 'CALL_END',
+          callId: activeCallId,
+          senderRole: myRole
+        });
+      }
+      cleanupCallMedia();
+    }
+
+    function cleanupCallMedia() {
+      clearInterval(callDurationInterval);
+      if (localCallStream) {
+        localCallStream.getTracks().forEach(t => t.stop());
+        localCallStream = null;
+      }
+      if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+      }
+      currentCallState = null;
+      activeCallId = null;
+      document.getElementById('activeCallOverlay')?.classList.add('hidden');
+    }
+
+    function showActiveCallUI() {
+      const other = getOtherRole();
+      const pName = nicknames[other] || 'Partner';
+      document.getElementById('activeCallPartnerName').textContent = pName;
+      document.getElementById('activeCallAvatar').textContent = pName.charAt(0).toUpperCase();
+      document.getElementById('callTimerPill').textContent = currentCallState === 'calling' ? 'Ringing...' : '0:00';
+      document.getElementById('activeCallStatusSub').textContent = currentCallState === 'calling' ? 'Calling partner...' : 'Connected';
+      document.getElementById('activeCallOverlay')?.classList.remove('hidden');
+      updateActiveCallVisibility();
+    }
+
+    function updateActiveCallVisibility() {
+      const showVideo = currentCallType === 'video';
+      document.getElementById('remoteCallVideo')?.classList.toggle('hidden', !showVideo || currentCallState === 'calling');
+      document.getElementById('callAvatarPlaceholder')?.classList.toggle('hidden', showVideo && currentCallState === 'connected');
+      document.getElementById('localPipContainer')?.classList.toggle('hidden', !showVideo);
+      document.getElementById('callVideoToggleBtn')?.classList.toggle('hidden', !showVideo);
+      document.getElementById('callSwitchCamBtn')?.classList.toggle('hidden', !showVideo);
+    }
+
+    function startCallDurationTimer() {
+      clearInterval(callDurationInterval);
+      callDurationSeconds = 0;
+      callDurationInterval = setInterval(() => {
+        callDurationSeconds++;
+        const m = Math.floor(callDurationSeconds / 60);
+        const s = callDurationSeconds % 60;
+        const formatted = `${m}:${s < 10 ? '0' : ''}${s}`;
+        document.getElementById('callTimerPill').textContent = formatted;
+        document.getElementById('activeCallStatusSub').textContent = `Connected • ${formatted}`;
+      }, 1000);
+    }
+
+    function toggleCallAudioMute() {
+      if (!localCallStream) return;
+      localCallStream.getAudioTracks().forEach(t => { t.enabled = !t.enabled; });
+      isAudioMuted = !isAudioMuted;
+      document.getElementById('callMuteBtn').className = `w-12 h-12 rounded-full flex items-center justify-center transition ${isAudioMuted ? 'bg-red-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`;
+      document.getElementById('callMuteIcon').className = `fa-solid ${isAudioMuted ? 'fa-microphone-slash' : 'fa-microphone'}`;
+    }
+
+    function toggleCallVideoTrack() {
+      if (!localCallStream) return;
+      localCallStream.getVideoTracks().forEach(t => { t.enabled = !t.enabled; });
+      isVideoTrackEnabled = !isVideoTrackEnabled;
+      document.getElementById('callVideoToggleBtn').className = `w-12 h-12 rounded-full flex items-center justify-center transition ${!isVideoTrackEnabled ? 'bg-red-500 text-white' : 'bg-white/10 text-white hover:bg-white/20'}`;
+      document.getElementById('callVideoIcon').className = `fa-solid ${!isVideoTrackEnabled ? 'fa-video-slash' : 'fa-video'}`;
+    }
+
+    async function switchActiveCallCamera() {
+      if (!localCallStream || currentCallType !== 'video') return;
+      activeCallFacingMode = activeCallFacingMode === 'user' ? 'environment' : 'user';
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: activeCallFacingMode }
+        });
+        const newTrack = newStream.getVideoTracks()[0];
+        if (!newTrack) return;
+
+        // Replace track in WebRTC peer connection
+        if (peerConnection) {
+          const sender = peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+          if (sender) await sender.replaceTrack(newTrack);
+        }
+
+        // Stop old video track & attach new one to local stream
+        localCallStream.getVideoTracks().forEach(t => {
+          t.stop();
+          localCallStream.removeTrack(t);
+        });
+        localCallStream.addTrack(newTrack);
+        document.getElementById('localCallVideo').srcObject = localCallStream;
+      } catch (e) {}
+    }
+
+    // =========================================================================
+    // 14. UTILITY & BOOTSTRAP
+    // =========================================================================
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderCategoryPills();
+      renderProducts();
+      updateStoreBadges();
+      initSyncSystem();
+    });
+  </script>
+</body>
+</html>
+```
